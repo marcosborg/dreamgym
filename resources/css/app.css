@@ -1,0 +1,74 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source "../**/*.blade.php";
+@source "../**/*.js";
+@source "../**/*.vue";
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+:root {
+    --brand-ink: #151515;
+    --brand-blue: #0870ad;
+    --brand-blue-dark: #005f93;
+    --brand-blue-deep: #004f7a;
+    --brand-cream: #f4f9fd;
+    --brand-stone: #d8e8f2;
+    --brand-green: #1f7f63;
+}
+
+body {
+    background: var(--brand-cream);
+    color: var(--brand-ink);
+}
+
+.brand-shell {
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 80% 10%, rgba(8, 112, 173, .18), transparent 28rem),
+        linear-gradient(180deg, #ffffff 0%, #f4f9fd 45%, #ffffff 100%);
+}
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: .5rem;
+    background: var(--brand-blue);
+    color: white;
+    font-weight: 700;
+    padding: .875rem 1.25rem;
+}
+
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--brand-stone);
+    border-radius: .5rem;
+    background: white;
+    color: var(--brand-ink);
+    font-weight: 700;
+    padding: .875rem 1.25rem;
+}
+
+.btn-primary:hover {
+    background: var(--brand-blue-dark);
+}
+
+.field {
+    width: 100%;
+    border: 1px solid var(--brand-stone);
+    border-radius: .5rem;
+    background: white;
+    padding: .75rem .875rem;
+}
+
+.section {
+    width: min(1120px, calc(100% - 2rem));
+    margin: 0 auto;
+}
