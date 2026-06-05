@@ -30,7 +30,6 @@ class BookingController extends Controller
         $data = $request->validate([
             'room_id' => ['required', 'exists:rooms,id'],
             'starts_at' => ['required', 'date'],
-            'slots' => ['required', 'integer', 'min:1', 'max:8'],
             'customer_name' => ['required', 'string', 'max:120'],
             'customer_email' => ['required', 'email', 'max:160'],
             'customer_phone' => ['nullable', 'string', 'max:40'],
@@ -40,8 +39,7 @@ class BookingController extends Controller
 
         $room = Room::query()->where('is_active', true)->findOrFail($data['room_id']);
         $startsAt = Carbon::parse($data['starts_at'], config('app.timezone'));
-        $slotCount = (int) $data['slots'];
-        $endsAt = $startsAt->copy()->addMinutes(AvailabilityService::SLOT_MINUTES * $slotCount);
+        $endsAt = $startsAt->copy()->addMinutes(AvailabilityService::SLOT_MINUTES);
 
         abort_unless($availability->isAvailableRange($room, $startsAt, $endsAt), 422, __('site.slot_unavailable'));
 
@@ -72,7 +70,7 @@ class BookingController extends Controller
             'ends_at' => $endsAt,
             'status' => Booking::STATUS_PENDING,
             'payment_status' => 'pending',
-            'price_cents' => $room->slot_price_cents * $slotCount,
+            'price_cents' => $room->slot_price_cents,
             'currency' => $room->currency,
         ]);
 

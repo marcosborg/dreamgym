@@ -12,7 +12,7 @@ use Illuminate\Support\Collection;
 
 class AvailabilityService
 {
-    public const SLOT_MINUTES = 30;
+    public const SLOT_MINUTES = 60;
 
     public function slotsForDate(Room $room, string $date): Collection
     {
@@ -39,7 +39,8 @@ class AvailabilityService
             ->map(fn (Carbon $start) => [
                 'starts_at' => $start->copy(),
                 'ends_at' => $start->copy()->addMinutes(self::SLOT_MINUTES),
-                'available' => ! $this->hasConflict($room, $start, $start->copy()->addMinutes(self::SLOT_MINUTES)),
+                'available' => $start->isFuture()
+                    && ! $this->hasConflict($room, $start, $start->copy()->addMinutes(self::SLOT_MINUTES)),
             ])
             ->values();
     }
@@ -68,15 +69,15 @@ class AvailabilityService
 
     public function hasConflict(Room $room, Carbon $startsAt, Carbon $endsAt, ?Booking $ignoreBooking = null): bool
     {
-        $bookingConflict = Booking::query()
+        $bookingCount = Booking::query()
             ->where('room_id', $room->id)
             ->whereIn('status', [Booking::STATUS_PENDING, Booking::STATUS_CONFIRMED])
             ->when($ignoreBooking, fn ($query) => $query->whereKeyNot($ignoreBooking->id))
             ->where('starts_at', '<', $endsAt)
             ->where('ends_at', '>', $startsAt)
-            ->exists();
+            ->count();
 
-        if ($bookingConflict) {
+        if ($bookingCount >= $room->capacity) {
             return true;
         }
 

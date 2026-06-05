@@ -16,7 +16,7 @@ class RoomsTable
         return $table
             ->columns([
                 TextColumn::make('name')->searchable()->sortable(),
-                TextColumn::make('slot_price_cents')->money('EUR', divideBy: 100)->label('Price / 30 min'),
+                TextColumn::make('slot_price_cents')->money('EUR', divideBy: 100)->label('Price / hour'),
                 TextColumn::make('capacity')->sortable(),
                 IconColumn::make('is_active')->boolean(),
             ])

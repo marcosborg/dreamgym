@@ -9,6 +9,7 @@ use App\Models\Booking;
 use App\Models\OpeningHour;
 use App\Models\Room;
 use App\Services\AvailabilityService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
@@ -17,6 +18,20 @@ class BookingFlowTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Carbon::setTestNow('2026-06-05 12:00:00');
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+
+        parent::tearDown();
+    }
+
     public function test_public_booking_flow_confirms_payment_generates_code_and_sends_email(): void
     {
         Mail::fake();
@@ -24,8 +39,7 @@ class BookingFlowTest extends TestCase
 
         $response = $this->post(route('bookings.store'), [
             'room_id' => $room->id,
-            'starts_at' => '2026-06-01 10:00:00',
-            'slots' => 2,
+            'starts_at' => '2026-06-08 10:00:00',
             'customer_name' => 'Sara Borges',
             'customer_email' => 'sara@example.test',
             'customer_phone' => '+351900000000',
@@ -37,8 +51,8 @@ class BookingFlowTest extends TestCase
         $booking = Booking::firstOrFail();
         $response->assertRedirect(route('checkout.show', $booking));
         $this->assertSame('pending', $booking->status);
-        $this->assertSame('2026-06-01 11:00:00', $booking->ends_at->format('Y-m-d H:i:s'));
-        $this->assertSame(2400, $booking->price_cents);
+        $this->assertSame('2026-06-08 11:00:00', $booking->ends_at->format('Y-m-d H:i:s'));
+        $this->assertSame(1200, $booking->price_cents);
         $this->assertNotNull($booking->user_id);
         $this->assertAuthenticated();
 
@@ -48,8 +62,8 @@ class BookingFlowTest extends TestCase
         $this->assertSame('confirmed', $booking->status);
         $this->assertSame('paid', $booking->payment_status);
         $this->assertMatchesRegularExpression('/^\d{6}$/', $booking->accessCode->code);
-        $this->assertSame('2026-06-01 09:55:00', $booking->accessCode->valid_from->format('Y-m-d H:i:s'));
-        $this->assertSame('2026-06-01 11:05:00', $booking->accessCode->valid_until->format('Y-m-d H:i:s'));
+        $this->assertSame('2026-06-08 09:55:00', $booking->accessCode->valid_from->format('Y-m-d H:i:s'));
+        $this->assertSame('2026-06-08 11:05:00', $booking->accessCode->valid_until->format('Y-m-d H:i:s'));
         $this->assertSame('provisioned', $booking->accessCode->provision_status);
 
         Mail::assertSent(BookingConfirmed::class);
@@ -70,8 +84,8 @@ class BookingFlowTest extends TestCase
             'customer_name' => 'Customer',
             'customer_email' => 'customer@example.test',
             'locale' => 'pt',
-            'starts_at' => '2026-06-01 10:00:00',
-            'ends_at' => '2026-06-01 10:30:00',
+            'starts_at' => '2026-06-08 10:00:00',
+            'ends_at' => '2026-06-08 11:00:00',
             'status' => 'confirmed',
             'payment_status' => 'paid',
             'price_cents' => 1200,
@@ -94,8 +108,8 @@ class BookingFlowTest extends TestCase
             'customer_name' => 'Existing',
             'customer_email' => 'existing@example.test',
             'locale' => 'pt',
-            'starts_at' => '2026-06-01 10:00:00',
-            'ends_at' => '2026-06-01 10:30:00',
+            'starts_at' => '2026-06-08 10:00:00',
+            'ends_at' => '2026-06-08 11:00:00',
             'status' => 'confirmed',
             'payment_status' => 'paid',
             'price_cents' => 1200,
@@ -104,10 +118,36 @@ class BookingFlowTest extends TestCase
 
         $this->post(route('bookings.store'), [
             'room_id' => $room->id,
-            'starts_at' => '2026-06-01 10:00:00',
-            'slots' => 1,
+            'starts_at' => '2026-06-08 10:00:00',
             'customer_name' => 'New',
             'customer_email' => 'new@example.test',
+        ])->assertStatus(422);
+    }
+
+    public function test_room_capacity_allows_multiple_bookings_for_the_same_slot(): void
+    {
+        $room = $this->roomWithHours(capacity: 4);
+
+        for ($i = 1; $i <= 4; $i++) {
+            $this->post(route('bookings.store'), [
+                'room_id' => $room->id,
+                'starts_at' => '2026-06-08 10:00:00',
+                'customer_name' => "Customer {$i}",
+                'customer_email' => "customer{$i}@example.test",
+            ])->assertRedirect();
+        }
+
+        $this->assertSame(4, Booking::query()->count());
+        $this->assertFalse(app(AvailabilityService::class)->isAvailable(
+            $room,
+            Carbon::parse('2026-06-08 10:00:00', config('app.timezone')),
+        ));
+
+        $this->post(route('bookings.store'), [
+            'room_id' => $room->id,
+            'starts_at' => '2026-06-08 10:00:00',
+            'customer_name' => 'Extra Customer',
+            'customer_email' => 'extra@example.test',
         ])->assertStatus(422);
     }
 
@@ -117,16 +157,35 @@ class BookingFlowTest extends TestCase
         BlackoutPeriod::create([
             'room_id' => $room->id,
             'title' => 'Maintenance',
-            'starts_at' => '2026-06-01 11:00:00',
-            'ends_at' => '2026-06-01 12:00:00',
+            'starts_at' => '2026-06-08 11:00:00',
+            'ends_at' => '2026-06-08 12:00:00',
         ]);
 
-        $slots = app(AvailabilityService::class)->slotsForDate($room, '2026-06-01');
+        $slots = app(AvailabilityService::class)->slotsForDate($room, '2026-06-08');
         $blocked = $slots->first(fn ($slot) => $slot['starts_at']->format('H:i') === '11:00');
-        $open = $slots->first(fn ($slot) => $slot['starts_at']->format('H:i') === '10:30');
+        $open = $slots->first(fn ($slot) => $slot['starts_at']->format('H:i') === '10:00');
 
         $this->assertFalse($blocked['available']);
         $this->assertTrue($open['available']);
+    }
+
+    public function test_past_slots_are_unavailable(): void
+    {
+        $room = $this->roomWithHours();
+
+        OpeningHour::query()->update([
+            'weekday' => 5,
+            'opens_at' => '09:00',
+            'closes_at' => '15:00',
+        ]);
+
+        $slots = app(AvailabilityService::class)->slotsForDate($room, '2026-06-05');
+
+        $past = $slots->first(fn ($slot) => $slot['starts_at']->format('H:i') === '11:00');
+        $future = $slots->first(fn ($slot) => $slot['starts_at']->format('H:i') === '13:00');
+
+        $this->assertFalse($past['available']);
+        $this->assertTrue($future['available']);
     }
 
     public function test_language_switch_sets_session_locale(): void
@@ -135,11 +194,11 @@ class BookingFlowTest extends TestCase
         $this->withSession(['locale' => 'en'])->get(route('home'))->assertSee('Your private gym room');
     }
 
-    private function roomWithHours(): Room
+    private function roomWithHours(int $capacity = 1): Room
     {
         $room = Room::create([
             'name' => 'Dream Gym Private Room',
-            'capacity' => 1,
+            'capacity' => $capacity,
             'slot_price_cents' => 1200,
             'currency' => 'EUR',
             'is_active' => true,

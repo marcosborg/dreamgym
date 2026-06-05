@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
         $room = Room::updateOrCreate(
             ['name' => 'Dream Gym Private Room'],
             [
-                'description' => 'Private gym room for focused 30-minute training sessions.',
+                'description' => 'Private gym room for focused 1-hour training sessions.',
                 'capacity' => 1,
                 'slot_price_cents' => 1200,
                 'currency' => 'EUR',

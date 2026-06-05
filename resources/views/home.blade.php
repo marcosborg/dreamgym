@@ -16,8 +16,8 @@
                 <div class="flex h-full flex-col justify-between">
                     <div class="text-white/85">Private training room</div>
                     <div>
-                        <div class="text-5xl font-black">30</div>
-                        <div class="text-lg">minute slots</div>
+                        <div class="text-5xl font-black">1h</div>
+                        <div class="text-lg">slots de treino</div>
                     </div>
                     <div class="flex justify-between border-t border-white/20 pt-5 text-sm">
                         <span>{{ __('site.price_label') }}</span>

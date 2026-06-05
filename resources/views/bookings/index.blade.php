@@ -32,14 +32,7 @@
                 <input type="hidden" name="room_id" value="{{ $room->id }}">
                 <h2 class="text-xl font-black">{{ __('site.your_details') }}</h2>
                 <div class="mt-5 space-y-4">
-                    <label class="block text-sm font-bold">
-                        {{ __('site.slot_count') }}
-                        <select name="slots" class="field mt-1" required>
-                            @for ($i = 1; $i <= 8; $i++)
-                                <option value="{{ $i }}">{{ $i }} - {{ $i * 30 }} min</option>
-                            @endfor
-                        </select>
-                    </label>
+                    <p class="rounded bg-[var(--brand-cream)] p-3 text-sm font-semibold">{{ __('site.fixed_duration') }}</p>
                     <label class="block text-sm font-bold">{{ __('site.name') }}<input name="customer_name" class="field mt-1" required></label>
                     <label class="block text-sm font-bold">{{ __('site.email') }}<input name="customer_email" type="email" class="field mt-1" required></label>
                     <label class="block text-sm font-bold">{{ __('site.phone') }}<input name="customer_phone" class="field mt-1"></label>

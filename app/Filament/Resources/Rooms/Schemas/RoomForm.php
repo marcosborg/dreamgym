@@ -17,7 +17,7 @@ class RoomForm
                 Textarea::make('description')->columnSpanFull(),
                 TextInput::make('capacity')->numeric()->required()->default(1),
                 TextInput::make('slot_price_cents')
-                    ->label('Price per 30-minute slot (cents)')
+                    ->label('Price per 1-hour slot (cents)')
                     ->helperText('Example: 1200 = 12,00 EUR. This is where you configure the slot price.')
                     ->numeric()
                     ->required()
