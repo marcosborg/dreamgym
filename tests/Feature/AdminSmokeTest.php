@@ -40,6 +40,21 @@ class AdminSmokeTest extends TestCase
         $this->actingAs($user)->get('/admin/users')->assertOk();
     }
 
+    public function test_authenticated_admin_settings_page_loads(): void
+    {
+        $user = User::create([
+            'name' => 'Admin',
+            'email' => 'settings-admin@example.test',
+            'password' => Hash::make('password'),
+            'is_admin' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->get('/admin/settings')
+            ->assertOk()
+            ->assertSee('Modo de manutenção');
+    }
+
     public function test_customer_cannot_access_admin_dashboard(): void
     {
         $user = User::create([
