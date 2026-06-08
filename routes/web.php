@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Auth\CustomerAuthController;
@@ -19,6 +20,10 @@ Route::view('/privacy', 'legal.privacy')->name('legal.privacy');
 
 Route::get('/book', [BookingController::class, 'index'])->name('bookings.index');
 Route::post('/book', [BookingController::class, 'store'])->name('bookings.store');
+Route::post('/purchase', [PurchaseController::class, 'store'])->name('purchase.store');
+Route::get('/purchase/{payment}/checkout', [PurchaseController::class, 'checkout'])->middleware('auth')->name('purchase.checkout');
+Route::post('/purchase/{payment}/complete', [PurchaseController::class, 'complete'])->middleware('auth')->name('purchase.complete');
+Route::get('/purchase/{payment}/confirmed', [PurchaseController::class, 'confirmed'])->middleware('auth')->name('purchase.confirmed');
 Route::get('/checkout/{booking}', [CheckoutController::class, 'show'])->name('checkout.show');
 Route::post('/checkout/{booking}/complete', [CheckoutController::class, 'complete'])->name('checkout.complete');
 Route::get('/booking/{booking}/confirmed', [CheckoutController::class, 'confirmed'])->name('booking.confirmed');

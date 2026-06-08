@@ -13,7 +13,14 @@ class PaymentForm
     {
         return $schema
             ->components([
-                Select::make('booking_id')->relationship('booking', 'customer_name')->required(),
+                Select::make('booking_id')->relationship('booking', 'customer_name'),
+                Select::make('user_id')->relationship('user', 'name'),
+                Select::make('product_type')->options([
+                    'single_hour' => 'Single hour',
+                    'group_hour' => 'Group hour',
+                    'session_pack' => 'Session pack',
+                    'membership' => 'Membership',
+                ])->required(),
                 TextInput::make('provider')->required(),
                 TextInput::make('reference')->required(),
                 TextInput::make('amount_cents')->numeric()->required(),

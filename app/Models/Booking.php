@@ -12,6 +12,13 @@ class Booking extends Model
     public const STATUS_CONFIRMED = 'confirmed';
     public const STATUS_CANCELLED = 'cancelled';
 
+    public const TYPE_SINGLE_HOUR = 'single_hour';
+    public const TYPE_GROUP_HOUR = 'group_hour';
+
+    public const PAID_WITH_PAYMENT = 'payment';
+    public const PAID_WITH_CREDITS = 'credits';
+    public const PAID_WITH_MEMBERSHIP = 'membership';
+
     protected $fillable = [
         'room_id',
         'user_id',
@@ -19,10 +26,13 @@ class Booking extends Model
         'customer_email',
         'customer_phone',
         'locale',
+        'booking_type',
+        'seats_reserved',
         'starts_at',
         'ends_at',
         'status',
         'payment_status',
+        'paid_with',
         'price_cents',
         'currency',
         'payment_reference',
@@ -38,6 +48,7 @@ class Booking extends Model
             'confirmed_at' => 'datetime',
             'cancelled_at' => 'datetime',
             'price_cents' => 'integer',
+            'seats_reserved' => 'integer',
         ];
     }
 

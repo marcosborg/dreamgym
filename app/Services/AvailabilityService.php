@@ -39,20 +39,21 @@ class AvailabilityService
             ->map(fn (Carbon $start) => [
                 'starts_at' => $start->copy(),
                 'ends_at' => $start->copy()->addMinutes(self::SLOT_MINUTES),
+                'remaining_capacity' => max(0, $room->capacity - $this->reservedSeats($room, $start, $start->copy()->addMinutes(self::SLOT_MINUTES))),
                 'available' => $start->isFuture()
                     && ! $this->hasConflict($room, $start, $start->copy()->addMinutes(self::SLOT_MINUTES)),
             ])
             ->values();
     }
 
-    public function isAvailable(Room $room, Carbon $startsAt, ?Booking $ignoreBooking = null): bool
+    public function isAvailable(Room $room, Carbon $startsAt, ?Booking $ignoreBooking = null, int $seatsRequested = 1, bool $requiresEmptySlot = false): bool
     {
         $endsAt = $startsAt->copy()->addMinutes(self::SLOT_MINUTES);
 
-        return ! $this->hasConflict($room, $startsAt, $endsAt, $ignoreBooking);
+        return ! $this->hasConflict($room, $startsAt, $endsAt, $ignoreBooking, $seatsRequested, $requiresEmptySlot);
     }
 
-    public function isAvailableRange(Room $room, Carbon $startsAt, Carbon $endsAt, ?Booking $ignoreBooking = null): bool
+    public function isAvailableRange(Room $room, Carbon $startsAt, Carbon $endsAt, ?Booking $ignoreBooking = null, int $seatsRequested = 1, bool $requiresEmptySlot = false): bool
     {
         if ($endsAt->diffInMinutes($startsAt) % self::SLOT_MINUTES !== 0) {
             return false;
@@ -64,20 +65,18 @@ class AvailabilityService
 
         return $selectedStarts->every(fn (string $slotStart): bool => $slots->contains(
             fn (array $slot): bool => $slot['starts_at']->format('Y-m-d H:i:s') === $slotStart && $slot['available']
-        )) && ! $this->hasConflict($room, $startsAt, $endsAt, $ignoreBooking);
+        )) && ! $this->hasConflict($room, $startsAt, $endsAt, $ignoreBooking, $seatsRequested, $requiresEmptySlot);
     }
 
-    public function hasConflict(Room $room, Carbon $startsAt, Carbon $endsAt, ?Booking $ignoreBooking = null): bool
+    public function hasConflict(Room $room, Carbon $startsAt, Carbon $endsAt, ?Booking $ignoreBooking = null, int $seatsRequested = 1, bool $requiresEmptySlot = false): bool
     {
-        $bookingCount = Booking::query()
-            ->where('room_id', $room->id)
-            ->whereIn('status', [Booking::STATUS_PENDING, Booking::STATUS_CONFIRMED])
-            ->when($ignoreBooking, fn ($query) => $query->whereKeyNot($ignoreBooking->id))
-            ->where('starts_at', '<', $endsAt)
-            ->where('ends_at', '>', $startsAt)
-            ->count();
+        $reservedSeats = $this->reservedSeats($room, $startsAt, $endsAt, $ignoreBooking);
 
-        if ($bookingCount >= $room->capacity) {
+        if ($requiresEmptySlot && $reservedSeats > 0) {
+            return true;
+        }
+
+        if (($reservedSeats + $seatsRequested) > $room->capacity) {
             return true;
         }
 
@@ -86,5 +85,16 @@ class AvailabilityService
             ->where('starts_at', '<', $endsAt)
             ->where('ends_at', '>', $startsAt)
             ->exists();
+    }
+
+    private function reservedSeats(Room $room, Carbon $startsAt, Carbon $endsAt, ?Booking $ignoreBooking = null): int
+    {
+        return (int) Booking::query()
+            ->where('room_id', $room->id)
+            ->whereIn('status', [Booking::STATUS_PENDING, Booking::STATUS_CONFIRMED])
+            ->when($ignoreBooking, fn ($query) => $query->whereKeyNot($ignoreBooking->id))
+            ->where('starts_at', '<', $endsAt)
+            ->where('ends_at', '>', $startsAt)
+            ->sum('seats_reserved');
     }
 }

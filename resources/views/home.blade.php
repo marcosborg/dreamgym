@@ -45,14 +45,12 @@
     <section id="faq" class="section py-14">
         <h2 class="text-3xl font-black">{{ __('site.faq_title') }}</h2>
         <div class="mt-6 grid gap-4 md:grid-cols-2">
-            <div class="rounded-lg bg-white p-5">
-                <h3 class="font-bold">{{ __('site.faq_1_q') }}</h3>
-                <p class="mt-2 text-neutral-700">{{ __('site.faq_1_a') }}</p>
-            </div>
-            <div class="rounded-lg bg-white p-5">
-                <h3 class="font-bold">{{ __('site.faq_2_q') }}</h3>
-                <p class="mt-2 text-neutral-700">{{ __('site.faq_2_a') }}</p>
-            </div>
+            @foreach (app(\App\Services\ProductCatalog::class)->faq() as $item)
+                <div class="rounded-lg bg-white p-5">
+                    <h3 class="font-bold">{{ $item['question_'.app()->getLocale()] ?? $item['question_pt'] ?? '' }}</h3>
+                    <p class="mt-2 text-neutral-700">{{ $item['answer_'.app()->getLocale()] ?? $item['answer_pt'] ?? '' }}</p>
+                </div>
+            @endforeach
         </div>
     </section>
 @endsection

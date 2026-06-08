@@ -7,6 +7,8 @@ use App\Services\SiteSettings;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -37,6 +39,16 @@ class Settings extends Page
         $this->form->fill([
             'maintenance_enabled' => app(SiteSettings::class)->maintenanceEnabled(),
             'maintenance_allowed_ips' => implode("\n", app(SiteSettings::class)->maintenanceAllowedIps()),
+            'product_session_pack_active' => Setting::getValue('product_session_pack_active', true),
+            'product_session_pack_name' => Setting::getValue('product_session_pack_name', 'Pack 10 sessões'),
+            'product_session_pack_price_cents' => Setting::getValue('product_session_pack_price_cents'),
+            'product_membership_active' => Setting::getValue('product_membership_active', false),
+            'product_membership_name' => Setting::getValue('product_membership_name', 'Mensalidade'),
+            'product_membership_price_cents' => Setting::getValue('product_membership_price_cents'),
+            'product_group_hour_active' => Setting::getValue('product_group_hour_active', true),
+            'product_group_hour_name' => Setting::getValue('product_group_hour_name', 'Grupo privado'),
+            'product_group_hour_price_cents' => Setting::getValue('product_group_hour_price_cents'),
+            'faq_items' => app(\App\Services\ProductCatalog::class)->faq(),
         ]);
     }
 
@@ -62,6 +74,31 @@ class Settings extends Page
                             ->rows(5)
                             ->columnSpanFull(),
                     ]),
+                Section::make('Produtos e preços')
+                    ->schema([
+                        Toggle::make('product_session_pack_active')->label('Ativar pack 10 sessões'),
+                        TextInput::make('product_session_pack_name')->label('Nome do pack')->maxLength(120),
+                        TextInput::make('product_session_pack_price_cents')->label('Preço do pack (cêntimos)')->numeric(),
+                        Toggle::make('product_membership_active')->label('Ativar mensalidade'),
+                        TextInput::make('product_membership_name')->label('Nome da mensalidade')->maxLength(120),
+                        TextInput::make('product_membership_price_cents')->label('Preço da mensalidade (cêntimos)')->numeric(),
+                        Toggle::make('product_group_hour_active')->label('Ativar grupo privado'),
+                        TextInput::make('product_group_hour_name')->label('Nome do grupo')->maxLength(120),
+                        TextInput::make('product_group_hour_price_cents')->label('Preço grupo privado (cêntimos)')->numeric(),
+                    ])->columns(3),
+                Section::make('FAQ')
+                    ->schema([
+                        Repeater::make('faq_items')
+                            ->label('Perguntas frequentes')
+                            ->schema([
+                                TextInput::make('question_pt')->label('Pergunta PT')->required(),
+                                Textarea::make('answer_pt')->label('Resposta PT')->required(),
+                                TextInput::make('question_en')->label('Pergunta EN')->required(),
+                                Textarea::make('answer_en')->label('Resposta EN')->required(),
+                            ])
+                            ->addActionLabel('Adicionar pergunta')
+                            ->columnSpanFull(),
+                    ]),
             ]);
     }
 
@@ -71,6 +108,16 @@ class Settings extends Page
 
         Setting::setValue(SiteSettings::MAINTENANCE_ENABLED, (bool) ($data['maintenance_enabled'] ?? false));
         Setting::setValue(SiteSettings::MAINTENANCE_ALLOWED_IPS, $this->parseIps((string) ($data['maintenance_allowed_ips'] ?? '')));
+        Setting::setValue('product_session_pack_active', (bool) ($data['product_session_pack_active'] ?? false));
+        Setting::setValue('product_session_pack_name', $data['product_session_pack_name'] ?: 'Pack 10 sessões');
+        Setting::setValue('product_session_pack_price_cents', $this->nullableInt($data['product_session_pack_price_cents'] ?? null));
+        Setting::setValue('product_membership_active', (bool) ($data['product_membership_active'] ?? false));
+        Setting::setValue('product_membership_name', $data['product_membership_name'] ?: 'Mensalidade');
+        Setting::setValue('product_membership_price_cents', $this->nullableInt($data['product_membership_price_cents'] ?? null));
+        Setting::setValue('product_group_hour_active', (bool) ($data['product_group_hour_active'] ?? false));
+        Setting::setValue('product_group_hour_name', $data['product_group_hour_name'] ?: 'Grupo privado');
+        Setting::setValue('product_group_hour_price_cents', $this->nullableInt($data['product_group_hour_price_cents'] ?? null));
+        Setting::setValue('faq_items', array_values($data['faq_items'] ?? []));
 
         Notification::make()
             ->title('Definições guardadas')
@@ -130,5 +177,14 @@ class Settings extends Page
             fn (string $ip): string => trim($ip),
             preg_split('/[\s,]+/', $value) ?: [],
         ))));
+    }
+
+    private function nullableInt(mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return (int) $value;
     }
 }

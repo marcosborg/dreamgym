@@ -26,6 +26,8 @@ class User extends Authenticatable implements FilamentUser
         'phone',
         'password',
         'is_admin',
+        'session_credits',
+        'membership_expires_at',
     ];
 
     /**
@@ -49,6 +51,8 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'session_credits' => 'integer',
+            'membership_expires_at' => 'datetime',
         ];
     }
 
@@ -60,5 +64,10 @@ class User extends Authenticatable implements FilamentUser
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class);
+    }
+
+    public function hasActiveMembership(): bool
+    {
+        return $this->membership_expires_at?->isFuture() ?? false;
     }
 }

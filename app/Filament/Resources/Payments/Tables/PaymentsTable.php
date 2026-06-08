@@ -17,6 +17,8 @@ class PaymentsTable
             ->columns([
                 TextColumn::make('reference')->searchable(),
                 TextColumn::make('booking.customer_name')->label('Customer')->searchable(),
+                TextColumn::make('user.name')->label('User')->searchable(),
+                TextColumn::make('product_type')->badge(),
                 TextColumn::make('amount_cents')->money('EUR', divideBy: 100),
                 TextColumn::make('status')->badge(),
                 TextColumn::make('provider'),

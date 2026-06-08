@@ -7,7 +7,9 @@ use App\Models\AccessCode;
 use App\Models\BlackoutPeriod;
 use App\Models\Booking;
 use App\Models\OpeningHour;
+use App\Models\Payment;
 use App\Models\Room;
+use App\Models\User;
 use App\Services\AvailabilityService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -40,6 +42,7 @@ class BookingFlowTest extends TestCase
         $response = $this->post(route('bookings.store'), [
             'room_id' => $room->id,
             'starts_at' => '2026-06-08 10:00:00',
+            'booking_type' => Booking::TYPE_SINGLE_HOUR,
             'customer_name' => 'Sara Borges',
             'customer_email' => 'sara@example.test',
             'customer_phone' => '+351900000000',
@@ -119,6 +122,7 @@ class BookingFlowTest extends TestCase
         $this->post(route('bookings.store'), [
             'room_id' => $room->id,
             'starts_at' => '2026-06-08 10:00:00',
+            'booking_type' => Booking::TYPE_SINGLE_HOUR,
             'customer_name' => 'New',
             'customer_email' => 'new@example.test',
         ])->assertStatus(422);
@@ -132,6 +136,7 @@ class BookingFlowTest extends TestCase
             $this->post(route('bookings.store'), [
                 'room_id' => $room->id,
                 'starts_at' => '2026-06-08 10:00:00',
+                'booking_type' => Booking::TYPE_SINGLE_HOUR,
                 'customer_name' => "Customer {$i}",
                 'customer_email' => "customer{$i}@example.test",
             ])->assertRedirect();
@@ -146,9 +151,94 @@ class BookingFlowTest extends TestCase
         $this->post(route('bookings.store'), [
             'room_id' => $room->id,
             'starts_at' => '2026-06-08 10:00:00',
+            'booking_type' => Booking::TYPE_SINGLE_HOUR,
             'customer_name' => 'Extra Customer',
             'customer_email' => 'extra@example.test',
         ])->assertStatus(422);
+    }
+
+    public function test_group_booking_blocks_the_full_room_and_uses_group_price(): void
+    {
+        $room = $this->roomWithHours(capacity: 4);
+
+        $this->post(route('bookings.store'), [
+            'room_id' => $room->id,
+            'starts_at' => '2026-06-08 10:00:00',
+            'booking_type' => Booking::TYPE_GROUP_HOUR,
+            'customer_name' => 'Group Lead',
+            'customer_email' => 'group@example.test',
+        ])->assertRedirect();
+
+        $booking = Booking::firstOrFail();
+
+        $this->assertSame(Booking::TYPE_GROUP_HOUR, $booking->booking_type);
+        $this->assertSame(4, $booking->seats_reserved);
+        $this->assertSame(4080, $booking->price_cents);
+
+        $this->post(route('bookings.store'), [
+            'room_id' => $room->id,
+            'starts_at' => '2026-06-08 10:00:00',
+            'booking_type' => Booking::TYPE_SINGLE_HOUR,
+            'customer_name' => 'Late Customer',
+            'customer_email' => 'late@example.test',
+        ])->assertStatus(422);
+    }
+
+    public function test_session_pack_purchase_adds_credits_and_booking_consumes_one(): void
+    {
+        $room = $this->roomWithHours();
+
+        $this->post(route('purchase.store'), [
+            'product_type' => 'session_pack',
+            'customer_name' => 'Pack Customer',
+            'customer_email' => 'pack@example.test',
+            'password' => 'secret123',
+            'password_confirmation' => 'secret123',
+        ])->assertRedirect();
+
+        $payment = Payment::firstOrFail();
+        $this->post(route('purchase.complete', $payment))->assertRedirect(route('purchase.confirmed', $payment));
+
+        $user = User::firstWhere('email', 'pack@example.test');
+        $this->assertSame(10, $user->fresh()->session_credits);
+
+        $this->post(route('bookings.store'), [
+            'room_id' => $room->id,
+            'starts_at' => '2026-06-08 10:00:00',
+            'booking_type' => Booking::TYPE_SINGLE_HOUR,
+            'customer_name' => 'Pack Customer',
+            'customer_email' => 'pack@example.test',
+        ])->assertRedirect();
+
+        $booking = Booking::firstOrFail();
+        $this->assertSame('paid', $booking->payment_status);
+        $this->assertSame(Booking::PAID_WITH_CREDITS, $booking->paid_with);
+        $this->assertSame(0, $booking->price_cents);
+        $this->assertSame(9, $user->fresh()->session_credits);
+    }
+
+    public function test_membership_purchase_allows_booking_without_hour_payment(): void
+    {
+        $room = $this->roomWithHours();
+        $user = User::create([
+            'name' => 'Member',
+            'email' => 'member@example.test',
+            'password' => 'password',
+            'membership_expires_at' => now()->addDays(30),
+        ]);
+
+        $this->actingAs($user)->post(route('bookings.store'), [
+            'room_id' => $room->id,
+            'starts_at' => '2026-06-08 10:00:00',
+            'booking_type' => Booking::TYPE_SINGLE_HOUR,
+            'customer_name' => 'Member',
+            'customer_email' => 'member@example.test',
+        ])->assertRedirect();
+
+        $booking = Booking::firstOrFail();
+        $this->assertSame('paid', $booking->payment_status);
+        $this->assertSame(Booking::PAID_WITH_MEMBERSHIP, $booking->paid_with);
+        $this->assertSame(0, $booking->price_cents);
     }
 
     public function test_blackout_periods_remove_slots_from_availability(): void

@@ -21,8 +21,11 @@ class BookingsTable
                 TextColumn::make('customer_name')->searchable(),
                 TextColumn::make('customer_email')->searchable(),
                 TextColumn::make('room.name'),
+                TextColumn::make('booking_type')->badge(),
+                TextColumn::make('seats_reserved')->label('Seats'),
                 TextColumn::make('status')->badge(),
                 TextColumn::make('payment_status')->badge(),
+                TextColumn::make('paid_with')->badge(),
                 TextColumn::make('price_cents')->money('EUR', divideBy: 100),
             ])
             ->filters([

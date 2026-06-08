@@ -5,6 +5,19 @@
         <h1 class="text-4xl font-black">{{ __('site.my_account') }}</h1>
         <p class="mt-2 text-neutral-700">{{ __('site.booking_history') }}</p>
 
+        <div class="mt-8 grid gap-4 sm:grid-cols-2">
+            <div class="rounded-lg border border-[var(--brand-stone)] bg-white p-5">
+                <div class="text-sm text-neutral-500">{{ __('site.session_credits') }}</div>
+                <div class="mt-2 text-3xl font-black">{{ auth()->user()->session_credits }}</div>
+            </div>
+            <div class="rounded-lg border border-[var(--brand-stone)] bg-white p-5">
+                <div class="text-sm text-neutral-500">{{ __('site.membership') }}</div>
+                <div class="mt-2 text-lg font-bold">
+                    {{ auth()->user()->membership_expires_at?->isFuture() ? auth()->user()->membership_expires_at->format('d/m/Y') : __('site.inactive') }}
+                </div>
+            </div>
+        </div>
+
         <div class="mt-8 overflow-hidden rounded-lg border border-[var(--brand-stone)] bg-white">
             <table class="w-full text-left text-sm">
                 <thead class="bg-[var(--brand-cream)]">
@@ -13,6 +26,7 @@
                     <th class="p-4">{{ __('site.time') }}</th>
                     <th class="p-4">{{ __('site.room') }}</th>
                     <th class="p-4">Status</th>
+                    <th class="p-4">{{ __('site.booking_type') }}</th>
                     <th class="p-4">{{ __('site.access_code') }}</th>
                     <th class="p-4">{{ __('site.price_label') }}</th>
                 </tr>
@@ -24,6 +38,7 @@
                         <td class="p-4">{{ $booking->starts_at->format('H:i') }} - {{ $booking->ends_at->format('H:i') }}</td>
                         <td class="p-4">{{ $booking->room->name }}</td>
                         <td class="p-4">{{ $booking->status }}</td>
+                        <td class="p-4">{{ $booking->booking_type }}</td>
                         <td class="p-4 font-bold">{{ $booking->accessCode?->code ?? '-' }}</td>
                         <td class="p-4">{{ $booking->formatted_price }}</td>
                     </tr>
