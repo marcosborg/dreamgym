@@ -24,12 +24,14 @@ class BookingController extends Controller
         $date = $request->query('date', now()->toDateString());
         $slots = $availability->slotsForDate($room, $date);
         $products = [
+            'single_hour' => $catalog->singleHour($room),
             'session_pack' => $catalog->sessionPack($room),
             'membership' => $catalog->membership($room),
             'group_hour' => $catalog->groupHour($room),
         ];
+        $purchaseProducts = $catalog->purchaseProducts($room);
 
-        return view('bookings.index', compact('room', 'date', 'slots', 'products'));
+        return view('bookings.index', compact('room', 'date', 'slots', 'products', 'purchaseProducts'));
     }
 
     public function store(Request $request, AvailabilityService $availability, SandboxPaymentService $payments, ProductCatalog $catalog): RedirectResponse
@@ -94,7 +96,8 @@ class BookingController extends Controller
         $paidWith = null;
         $status = Booking::STATUS_PENDING;
         $paymentStatus = 'pending';
-        $priceCents = $isGroup ? $groupProduct['price_cents'] : $room->slot_price_cents;
+        $singleHourProduct = $catalog->singleHour($room);
+        $priceCents = $isGroup ? $groupProduct['price_cents'] : $singleHourProduct['price_cents'];
 
         if (! $isGroup && $user?->hasActiveMembership()) {
             $request->validate([

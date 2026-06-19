@@ -39,7 +39,7 @@ class BusinessStatsOverview extends StatsOverviewWidget
 
         return [
             Stat::make('Bookings today', $todayBookings)
-                ->description('Pending and confirmed slots')
+                ->description('Pending and confirmed hours')
                 ->icon(Heroicon::OutlinedCalendarDateRange)
                 ->chart($this->dailyBookingTrend())
                 ->color('primary'),

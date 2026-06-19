@@ -18,41 +18,44 @@ class AdminSmokeTest extends TestCase
 
     public function test_authenticated_admin_dashboard_loads(): void
     {
-        $user = User::create([
-            'name' => 'Admin',
-            'email' => 'admin@example.test',
-            'password' => Hash::make('password'),
-            'is_admin' => true,
-        ]);
+        $user = $this->adminUser('admin@example.test');
 
         $this->actingAs($user)->get('/admin')->assertOk();
     }
 
     public function test_authenticated_admin_users_page_loads(): void
     {
-        $user = User::create([
-            'name' => 'Admin',
-            'email' => 'admin@example.test',
-            'password' => Hash::make('password'),
-            'is_admin' => true,
-        ]);
+        $user = $this->adminUser('users-admin@example.test');
 
         $this->actingAs($user)->get('/admin/users')->assertOk();
     }
 
     public function test_authenticated_admin_settings_page_loads(): void
     {
-        $user = User::create([
-            'name' => 'Admin',
-            'email' => 'settings-admin@example.test',
-            'password' => Hash::make('password'),
-            'is_admin' => true,
-        ]);
+        $user = $this->adminUser('settings-admin@example.test');
 
         $this->actingAs($user)
             ->get('/admin/settings')
             ->assertOk()
             ->assertSee('Modo de manutenção');
+    }
+
+    public function test_authenticated_admin_products_page_loads(): void
+    {
+        $user = $this->adminUser('products-admin@example.test');
+
+        $this->actingAs($user)
+            ->get('/admin/products')
+            ->assertOk();
+    }
+
+    public function test_authenticated_admin_terms_page_loads(): void
+    {
+        $user = $this->adminUser('terms-admin@example.test');
+
+        $this->actingAs($user)
+            ->get('/admin/legal-term-sections')
+            ->assertOk();
     }
 
     public function test_customer_cannot_access_admin_dashboard(): void
@@ -65,5 +68,15 @@ class AdminSmokeTest extends TestCase
         ]);
 
         $this->actingAs($user)->get('/admin')->assertForbidden();
+    }
+
+    private function adminUser(string $email): User
+    {
+        return User::create([
+            'name' => 'Admin',
+            'email' => $email,
+            'password' => Hash::make('password'),
+            'is_admin' => true,
+        ]);
     }
 }

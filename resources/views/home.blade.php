@@ -7,8 +7,7 @@
             <h1 class="max-w-3xl text-4xl font-black leading-tight md:text-6xl">{{ __('site.hero_title') }}</h1>
             <p class="mt-6 max-w-2xl text-lg leading-8 text-neutral-700">{{ __('site.hero_copy') }}</p>
             <div class="mt-8 flex flex-wrap gap-3">
-                <a href="{{ route('bookings.index') }}" class="btn-primary">{{ __('site.book_now') }}</a>
-                <a href="#faq" class="btn-secondary">FAQ</a>
+                <a href="{{ route('bookings.index') }}" class="btn-primary btn-primary-lg">{{ __('site.book_now') }}</a>
             </div>
         </div>
         <div class="rounded-lg border border-[var(--brand-stone)] bg-white p-6 shadow-sm">
@@ -17,11 +16,11 @@
                     <div class="text-white/85">Private training room</div>
                     <div>
                         <div class="text-5xl font-black">1h</div>
-                        <div class="text-lg">slots de treino</div>
+                        <div class="text-lg">{{ __('site.training_hours') }}</div>
                     </div>
                     <div class="flex justify-between border-t border-white/20 pt-5 text-sm">
                         <span>{{ __('site.price_label') }}</span>
-                        <strong>{{ $room ? number_format($room->slot_price_cents / 100, 2, ',', ' ').' '.$room->currency : '12,00 EUR' }}</strong>
+                        <strong>{{ $singleHour ? number_format($singleHour['price_cents'] / 100, 2, ',', ' ').' '.$singleHour['currency'] : '12,00 EUR' }}</strong>
                     </div>
                 </div>
             </div>
@@ -45,10 +44,16 @@
     <section class="section py-14">
         <h2 class="text-3xl font-black">{{ __('site.how_it_works_title') }}</h2>
         <div class="mt-8 grid gap-4 md:grid-cols-4">
-            @foreach ([__('site.how_it_works_account'), __('site.how_it_works_book'), __('site.how_it_works_access'), __('site.how_it_works_train')] as $index => $step)
+            @foreach ([
+                [__('site.how_it_works_account'), __('site.how_it_works_account_desc')],
+                [__('site.how_it_works_book'), __('site.how_it_works_book_desc')],
+                [__('site.how_it_works_access'), __('site.how_it_works_access_desc')],
+                [__('site.how_it_works_train'), __('site.how_it_works_train_desc')],
+            ] as $index => [$step, $description])
                 <div class="rounded-lg border border-[var(--brand-stone)] bg-white p-5">
                     <span class="flex h-10 w-10 items-center justify-center rounded bg-[var(--brand-ink)] text-sm font-black text-white">{{ $index + 1 }}</span>
                     <p class="mt-4 font-bold">{{ $step }}</p>
+                    <p class="mt-2 text-sm leading-6 text-neutral-600">{{ $description }}</p>
                 </div>
             @endforeach
         </div>

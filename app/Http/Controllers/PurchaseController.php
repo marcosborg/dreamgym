@@ -20,7 +20,8 @@ class PurchaseController extends Controller
     public function store(Request $request, ProductCatalog $catalog): RedirectResponse
     {
         $rules = [
-            'product_type' => ['required', 'in:session_pack,membership'],
+            'product_id' => ['nullable', 'integer'],
+            'product_type' => ['required_without:product_id', 'nullable', 'in:session_pack,membership'],
             'customer_name' => [Auth::check() ? 'nullable' : 'required', 'string', 'max:120'],
             'customer_email' => [Auth::check() ? 'nullable' : 'required', 'email', 'max:160'],
             'customer_phone' => ['nullable', 'string', 'max:40'],
@@ -56,21 +57,24 @@ class PurchaseController extends Controller
             }
         }
 
-        $product = $data['product_type'] === ProductCatalog::SESSION_PACK
-            ? $catalog->sessionPack($room)
-            : $catalog->membership($room);
+        $product = ! empty($data['product_id'])
+            ? $catalog->findPurchaseProduct((int) $data['product_id'], $room)
+            : ($data['product_type'] === ProductCatalog::SESSION_PACK
+                ? $catalog->sessionPack($room)
+                : $catalog->membership($room));
 
-        abort_unless($product['active'], 422, __('site.product_unavailable'));
+        abort_unless($product && $product['active'], 422, __('site.product_unavailable'));
 
         $payment = Payment::create([
             'user_id' => $user->id,
-            'product_type' => $data['product_type'],
+            'product_type' => $product['type'],
             'provider' => 'sandbox_mbway_placeholder',
             'reference' => 'DG-' . Str::upper(Str::random(10)),
             'amount_cents' => $product['price_cents'],
-            'currency' => $room->currency,
+            'currency' => $product['currency'] ?? $room->currency,
             'status' => 'pending',
             'metadata' => [
+                'product_id' => $product['id'],
                 'label' => $product['name'],
                 'credits' => $product['credits'] ?? null,
                 'days' => $product['days'] ?? null,

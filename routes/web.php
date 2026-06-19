@@ -8,14 +8,21 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Auth\CustomerAuthController;
 use App\Models\Room;
+use App\Services\LegalTerms;
+use App\Services\ProductCatalog;
 
-Route::get('/', function () {
+Route::get('/', function (ProductCatalog $catalog) {
     $room = Room::query()->where('is_active', true)->first();
+    $singleHour = $room ? $catalog->singleHour($room) : null;
 
-    return view('home', compact('room'));
+    return view('home', compact('room', 'singleHour'));
 })->name('home');
 
-Route::view('/terms', 'legal.terms')->name('legal.terms');
+Route::get('/terms', function (LegalTerms $terms) {
+    return view('legal.terms', [
+        'sections' => $terms->sections(),
+    ]);
+})->name('legal.terms');
 Route::view('/privacy', 'legal.privacy')->name('legal.privacy');
 
 Route::get('/book', [BookingController::class, 'index'])->name('bookings.index');

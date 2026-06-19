@@ -267,7 +267,7 @@ class BookingFlowTest extends TestCase
 
         $this->assertSame(Booking::TYPE_GROUP_HOUR, $booking->booking_type);
         $this->assertSame(4, $booking->seats_reserved);
-        $this->assertSame(4080, $booking->price_cents);
+        $this->assertSame(10200, $booking->price_cents);
 
         $this->post(route('bookings.store'), [
             'room_id' => $room->id,

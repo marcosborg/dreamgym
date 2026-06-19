@@ -44,6 +44,7 @@
             <span>&copy; {{ date('Y') }} Dream Gym</span>
         </div>
         <nav class="flex gap-4 font-semibold">
+            <a href="{{ route('home') }}#faq">FAQ</a>
             <a href="{{ route('legal.terms') }}">{{ __('site.terms') }}</a>
             <a href="{{ route('legal.privacy') }}">{{ __('site.privacy') }}</a>
         </nav>

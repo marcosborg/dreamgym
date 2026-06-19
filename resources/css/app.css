@@ -44,6 +44,12 @@ body {
     padding: .875rem 1.25rem;
 }
 
+.btn-primary-lg {
+    border-radius: .625rem;
+    font-size: 1.125rem;
+    padding: 1.125rem 2rem;
+}
+
 .btn-secondary {
     display: inline-flex;
     align-items: center;

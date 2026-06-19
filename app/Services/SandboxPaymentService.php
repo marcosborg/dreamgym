@@ -88,7 +88,10 @@ class SandboxPaymentService
             $user = $payment->user()->lockForUpdate()->firstOrFail();
 
             if ($payment->product_type === ProductCatalog::SESSION_PACK) {
-                $user->increment('session_credits', ProductCatalog::SESSION_PACK_CREDITS);
+                $user->increment(
+                    'session_credits',
+                    (int) ($payment->metadata['credits'] ?? ProductCatalog::SESSION_PACK_CREDITS),
+                );
             }
 
             if ($payment->product_type === ProductCatalog::MEMBERSHIP) {
@@ -97,7 +100,9 @@ class SandboxPaymentService
                     : now();
 
                 $user->update([
-                    'membership_expires_at' => $startsAt->copy()->addDays(ProductCatalog::MEMBERSHIP_DAYS),
+                    'membership_expires_at' => $startsAt->copy()->addDays(
+                        (int) ($payment->metadata['days'] ?? ProductCatalog::MEMBERSHIP_DAYS),
+                    ),
                 ]);
             }
 

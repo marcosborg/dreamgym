@@ -6,20 +6,14 @@
         <div class="mt-6 grid gap-3 md:grid-cols-3">
             <a href="#booking-form" class="rounded-lg border border-[var(--brand-ink)] bg-[var(--brand-ink)] p-4 text-white">
                 <span class="block text-sm text-white/75">{{ __('site.option_book_hour') }}</span>
-                <strong class="mt-1 block text-2xl">{{ number_format($room->slot_price_cents / 100, 2, ',', ' ') }} {{ $room->currency }}</strong>
+                <strong class="mt-1 block text-2xl">{{ number_format($products['single_hour']['price_cents'] / 100, 2, ',', ' ') }} {{ $products['single_hour']['currency'] }}</strong>
             </a>
-            @if ($products['session_pack']['active'])
+            @foreach ($purchaseProducts as $product)
                 <a href="#purchase-form" class="rounded-lg border border-[var(--brand-stone)] bg-white p-4">
-                    <span class="block text-sm text-neutral-500">{{ $products['session_pack']['name'] }}</span>
-                    <strong class="mt-1 block text-2xl">{{ number_format($products['session_pack']['price_cents'] / 100, 2, ',', ' ') }} {{ $room->currency }}</strong>
+                    <span class="block text-sm text-neutral-500">{{ $product['name'] }}</span>
+                    <strong class="mt-1 block text-2xl">{{ number_format($product['price_cents'] / 100, 2, ',', ' ') }} {{ $product['currency'] }}</strong>
                 </a>
-            @endif
-            @if ($products['membership']['active'])
-                <a href="#purchase-form" class="rounded-lg border border-[var(--brand-stone)] bg-white p-4">
-                    <span class="block text-sm text-neutral-500">{{ $products['membership']['name'] }}</span>
-                    <strong class="mt-1 block text-2xl">{{ number_format($products['membership']['price_cents'] / 100, 2, ',', ' ') }} {{ $room->currency }}</strong>
-                </a>
-            @endif
+            @endforeach
         </div>
 
         <form method="GET" class="mt-6 flex max-w-sm gap-3">
@@ -30,7 +24,7 @@
 
         <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_420px]">
             <div>
-                <h2 class="mb-4 text-xl font-bold">{{ __('site.available_slots') }}</h2>
+                <h2 class="mb-4 text-xl font-bold">{{ __('site.available_hours') }}</h2>
                 <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
                     @foreach ($slots as $slot)
                         <label class="block">
@@ -63,7 +57,7 @@
                                 <label class="rounded border border-[var(--brand-stone)] p-3 text-sm font-semibold">
                                     <input type="radio" name="booking_type" value="group_hour">
                                     {{ __('site.group_hour') }}
-                                    <span class="block text-xs font-normal text-neutral-600">{{ number_format($products['group_hour']['price_cents'] / 100, 2, ',', ' ') }} {{ $room->currency }}</span>
+                                    <span class="block text-xs font-normal text-neutral-600">{{ number_format($products['group_hour']['price_cents'] / 100, 2, ',', ' ') }} {{ $products['group_hour']['currency'] }}</span>
                                 </label>
                             @endif
                         </div>
@@ -109,25 +103,25 @@
             </form>
         </div>
 
-        @if ($products['session_pack']['active'] || $products['membership']['active'])
+        @if ($purchaseProducts->isNotEmpty())
             <form id="purchase-form" method="POST" action="{{ route('purchase.store') }}" class="mt-10 max-w-3xl rounded-lg border border-[var(--brand-stone)] bg-white p-6">
                 @csrf
                 <h2 class="text-xl font-black">{{ __('site.buy_pack_or_membership') }}</h2>
                 <div class="mt-5 grid gap-3 sm:grid-cols-2">
-                    @if ($products['session_pack']['active'])
+                    @foreach ($purchaseProducts as $product)
                         <label class="rounded border border-[var(--brand-stone)] p-4">
-                            <input type="radio" name="product_type" value="session_pack" required>
-                            <span class="ml-1 font-bold">{{ $products['session_pack']['name'] }}</span>
-                            <span class="block text-sm text-neutral-600">{{ $products['session_pack']['credits'] }} {{ __('site.sessions') }} · {{ number_format($products['session_pack']['price_cents'] / 100, 2, ',', ' ') }} {{ $room->currency }}</span>
+                            <input type="radio" name="product_id" value="{{ $product['id'] }}" required>
+                            <span class="ml-1 font-bold">{{ $product['name'] }}</span>
+                            <span class="block text-sm text-neutral-600">
+                                @if ($product['credits'])
+                                    {{ $product['credits'] }} {{ __('site.sessions') }} ·
+                                @elseif ($product['days'])
+                                    {{ $product['days'] }} {{ __('site.days') }} ·
+                                @endif
+                                {{ number_format($product['price_cents'] / 100, 2, ',', ' ') }} {{ $product['currency'] }}
+                            </span>
                         </label>
-                    @endif
-                    @if ($products['membership']['active'])
-                        <label class="rounded border border-[var(--brand-stone)] p-4">
-                            <input type="radio" name="product_type" value="membership" required>
-                            <span class="ml-1 font-bold">{{ $products['membership']['name'] }}</span>
-                            <span class="block text-sm text-neutral-600">{{ $products['membership']['days'] }} {{ __('site.days') }} · {{ number_format($products['membership']['price_cents'] / 100, 2, ',', ' ') }} {{ $room->currency }}</span>
-                        </label>
-                    @endif
+                    @endforeach
                 </div>
 
                 @guest
