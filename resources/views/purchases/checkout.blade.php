@@ -11,6 +11,10 @@
             </dl>
             <form method="POST" action="{{ route('purchase.complete', $payment) }}" class="mt-8">
                 @csrf
+                <label class="mb-5 flex items-start gap-2 text-sm font-bold">
+                    <input type="checkbox" name="terms_accepted" value="1" required>
+                    <span>{!! __('site.terms_acceptance_html', ['url' => route('legal.terms')]) !!}</span>
+                </label>
                 <button class="btn-primary w-full" type="submit">{{ __('site.pay_now') }}</button>
             </form>
         </div>

@@ -41,8 +41,11 @@ class BookingController extends Controller
             'customer_name' => ['required', 'string', 'max:120'],
             'customer_email' => ['required', 'email', 'max:160'],
             'customer_phone' => ['nullable', 'string', 'max:40'],
+            'bringing_children' => ['required', 'boolean'],
+            'children_responsibility_accepted' => ['required_if:bringing_children,1', 'accepted_if:bringing_children,1'],
             'create_account' => ['nullable', 'boolean'],
             'password' => ['nullable', 'required_if:create_account,1', 'string', 'min:8', 'confirmed'],
+            'terms_accepted' => ['sometimes', 'accepted'],
         ]);
 
         $room = Room::query()->where('is_active', true)->findOrFail($data['room_id']);
@@ -94,11 +97,19 @@ class BookingController extends Controller
         $priceCents = $isGroup ? $groupProduct['price_cents'] : $room->slot_price_cents;
 
         if (! $isGroup && $user?->hasActiveMembership()) {
+            $request->validate([
+                'terms_accepted' => ['accepted'],
+            ]);
+
             $paidWith = Booking::PAID_WITH_MEMBERSHIP;
             $status = Booking::STATUS_CONFIRMED;
             $paymentStatus = 'paid';
             $priceCents = 0;
         } elseif (! $isGroup && $user && $user->session_credits > 0) {
+            $request->validate([
+                'terms_accepted' => ['accepted'],
+            ]);
+
             $user->decrement('session_credits');
             $paidWith = Booking::PAID_WITH_CREDITS;
             $status = Booking::STATUS_CONFIRMED;
@@ -117,6 +128,9 @@ class BookingController extends Controller
             'customer_email' => $data['customer_email'],
             'customer_phone' => $data['customer_phone'] ?? null,
             'locale' => app()->getLocale(),
+            'bringing_children' => (bool) $data['bringing_children'],
+            'children_responsibility_accepted_at' => (bool) $data['bringing_children'] ? now() : null,
+            'terms_accepted_at' => $request->boolean('terms_accepted') ? now() : null,
             'starts_at' => $startsAt,
             'ends_at' => $endsAt,
             'status' => $status,

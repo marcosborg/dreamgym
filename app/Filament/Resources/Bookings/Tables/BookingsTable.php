@@ -3,10 +3,12 @@
 namespace App\Filament\Resources\Bookings\Tables;
 
 use App\Models\Booking;
+use App\Services\BookingCancellationService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -26,6 +28,8 @@ class BookingsTable
                 TextColumn::make('status')->badge(),
                 TextColumn::make('payment_status')->badge(),
                 TextColumn::make('paid_with')->badge(),
+                IconColumn::make('bringing_children')->boolean()->label('Children'),
+                TextColumn::make('terms_accepted_at')->dateTime('d/m/Y H:i')->label('Terms'),
                 TextColumn::make('price_cents')->money('EUR', divideBy: 100),
             ])
             ->filters([
@@ -37,10 +41,7 @@ class BookingsTable
                     ->color('danger')
                     ->requiresConfirmation()
                     ->visible(fn (Booking $record): bool => $record->status !== Booking::STATUS_CANCELLED)
-                    ->action(fn (Booking $record) => $record->update([
-                        'status' => Booking::STATUS_CANCELLED,
-                        'cancelled_at' => now(),
-                    ])),
+                    ->action(fn (Booking $record) => app(BookingCancellationService::class)->cancel($record)),
                 EditAction::make(),
             ])
             ->toolbarActions([

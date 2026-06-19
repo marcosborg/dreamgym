@@ -71,6 +71,27 @@
                     <label class="block text-sm font-bold">{{ __('site.name') }}<input name="customer_name" class="field mt-1" required></label>
                     <label class="block text-sm font-bold">{{ __('site.email') }}<input name="customer_email" type="email" class="field mt-1" required></label>
                     <label class="block text-sm font-bold">{{ __('site.phone') }}<input name="customer_phone" class="field mt-1"></label>
+                    <fieldset>
+                        <legend class="text-sm font-bold">{{ __('site.bringing_children_question') }}</legend>
+                        <div class="mt-2 flex gap-4 text-sm font-semibold">
+                            <label class="flex items-center gap-2">
+                                <input type="radio" name="bringing_children" value="0" checked data-children-toggle>
+                                {{ __('site.no') }}
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <input type="radio" name="bringing_children" value="1" data-children-toggle>
+                                {{ __('site.yes') }}
+                            </label>
+                        </div>
+                    </fieldset>
+                    <label id="children-responsibility" class="hidden rounded border border-[var(--brand-stone)] p-3 text-sm font-semibold">
+                        <input type="checkbox" name="children_responsibility_accepted" value="1">
+                        {{ __('site.children_responsibility_acceptance') }}
+                    </label>
+                    <label class="flex items-start gap-2 text-sm font-bold">
+                        <input type="checkbox" name="terms_accepted" value="1">
+                        <span>{!! __('site.terms_acceptance_html', ['url' => route('legal.terms')]) !!}</span>
+                    </label>
                     @guest
                         <label class="flex items-center gap-2 text-sm font-bold">
                             <input type="checkbox" name="create_account" value="1">
@@ -126,4 +147,19 @@
             </form>
         @endif
     </section>
+    <script>
+        document.querySelectorAll('[data-children-toggle]').forEach((input) => {
+            input.addEventListener('change', () => {
+                const field = document.getElementById('children-responsibility');
+                const checkbox = field.querySelector('input[type="checkbox"]');
+                const isVisible = document.querySelector('[name="bringing_children"]:checked')?.value === '1';
+
+                field.classList.toggle('hidden', ! isVisible);
+                checkbox.required = isVisible;
+                if (! isVisible) {
+                    checkbox.checked = false;
+                }
+            });
+        });
+    </script>
 @endsection

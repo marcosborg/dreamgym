@@ -19,6 +19,14 @@
                 <p>{{ __('site.terms_payment_body') }}</p>
             </div>
             <div>
+                <h2 class="text-xl font-black">{{ __('site.terms_cancellation_title') }}</h2>
+                <p>{{ __('site.terms_cancellation_body') }}</p>
+            </div>
+            <div>
+                <h2 class="text-xl font-black">{{ __('site.terms_children_title') }}</h2>
+                <p>{{ __('site.terms_children_body') }}</p>
+            </div>
+            <div>
                 <h2 class="text-xl font-black">{{ __('site.terms_use_title') }}</h2>
                 <p>{{ __('site.terms_use_body') }}</p>
             </div>

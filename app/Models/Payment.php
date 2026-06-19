@@ -17,6 +17,7 @@ class Payment extends Model
         'currency',
         'status',
         'metadata',
+        'terms_accepted_at',
         'paid_at',
     ];
 
@@ -25,6 +26,7 @@ class Payment extends Model
         return [
             'amount_cents' => 'integer',
             'metadata' => 'array',
+            'terms_accepted_at' => 'datetime',
             'paid_at' => 'datetime',
         ];
     }

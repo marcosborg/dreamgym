@@ -2,6 +2,33 @@
 
 use Illuminate\Support\Str;
 
+$dbMode = env('DB_MODE');
+$dbModePrefix = in_array($dbMode, ['production', 'sandbox'], true)
+    ? 'DB_'.strtoupper($dbMode).'_'
+    : 'DB_';
+
+$dbEnv = fn (string $key, mixed $default = null): mixed => env($dbModePrefix.$key, env('DB_'.$key, $default));
+
+$mysqlConnection = fn (string $prefix = 'DB_'): array => [
+    'driver' => 'mysql',
+    'url' => env($prefix.'URL'),
+    'host' => env($prefix.'HOST', env('DB_HOST', '127.0.0.1')),
+    'port' => env($prefix.'PORT', env('DB_PORT', '3306')),
+    'database' => env($prefix.'DATABASE', env('DB_DATABASE', 'laravel')),
+    'username' => env($prefix.'USERNAME', env('DB_USERNAME', 'root')),
+    'password' => env($prefix.'PASSWORD', env('DB_PASSWORD', '')),
+    'unix_socket' => env($prefix.'SOCKET', env('DB_SOCKET', '')),
+    'charset' => env($prefix.'CHARSET', env('DB_CHARSET', 'utf8mb4')),
+    'collation' => env($prefix.'COLLATION', env('DB_COLLATION', 'utf8mb4_unicode_ci')),
+    'prefix' => '',
+    'prefix_indexes' => true,
+    'strict' => true,
+    'engine' => null,
+    'options' => extension_loaded('pdo_mysql') ? array_filter([
+        PDO::MYSQL_ATTR_SSL_CA => env($prefix.'MYSQL_ATTR_SSL_CA', env('MYSQL_ATTR_SSL_CA')),
+    ]) : [],
+];
+
 return [
 
     /*
@@ -33,23 +60,27 @@ return [
 
         'mysql' => [
             'driver' => 'mysql',
-            'url' => env('DB_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'laravel'),
-            'username' => env('DB_USERNAME', 'root'),
-            'password' => env('DB_PASSWORD', ''),
-            'unix_socket' => env('DB_SOCKET', ''),
-            'charset' => env('DB_CHARSET', 'utf8mb4'),
-            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'url' => $dbEnv('URL'),
+            'host' => $dbEnv('HOST', '127.0.0.1'),
+            'port' => $dbEnv('PORT', '3306'),
+            'database' => $dbEnv('DATABASE', 'laravel'),
+            'username' => $dbEnv('USERNAME', 'root'),
+            'password' => $dbEnv('PASSWORD', ''),
+            'unix_socket' => $dbEnv('SOCKET', ''),
+            'charset' => $dbEnv('CHARSET', 'utf8mb4'),
+            'collation' => $dbEnv('COLLATION', 'utf8mb4_unicode_ci'),
             'prefix' => '',
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                PDO::MYSQL_ATTR_SSL_CA => $dbEnv('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
+
+        'mysql_production' => $mysqlConnection('DB_PRODUCTION_'),
+
+        'mysql_sandbox' => $mysqlConnection('DB_SANDBOX_'),
 
         'mariadb' => [
             'driver' => 'mariadb',

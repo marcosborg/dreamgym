@@ -26,6 +26,9 @@ class Booking extends Model
         'customer_email',
         'customer_phone',
         'locale',
+        'bringing_children',
+        'children_responsibility_accepted_at',
+        'terms_accepted_at',
         'booking_type',
         'seats_reserved',
         'starts_at',
@@ -47,9 +50,19 @@ class Booking extends Model
             'ends_at' => 'datetime',
             'confirmed_at' => 'datetime',
             'cancelled_at' => 'datetime',
+            'children_responsibility_accepted_at' => 'datetime',
+            'terms_accepted_at' => 'datetime',
+            'bringing_children' => 'boolean',
             'price_cents' => 'integer',
             'seats_reserved' => 'integer',
         ];
+    }
+
+    public function canBeCancelledByCustomer(): bool
+    {
+        return $this->user_id !== null
+            && $this->status !== self::STATUS_CANCELLED
+            && $this->starts_at->isFuture();
     }
 
     public function room(): BelongsTo

@@ -4,6 +4,10 @@
     <section class="section py-12">
         <h1 class="text-4xl font-black">{{ __('site.my_account') }}</h1>
         <p class="mt-2 text-neutral-700">{{ __('site.booking_history') }}</p>
+        <p class="mt-2 text-sm text-neutral-600">{{ __('site.cancellation_policy_short') }}</p>
+        @if (session('status'))
+            <div class="mt-4 rounded border border-green-200 bg-green-50 p-4 text-sm text-green-800">{{ session('status') }}</div>
+        @endif
 
         <div class="mt-8 grid gap-4 sm:grid-cols-2">
             <div class="rounded-lg border border-[var(--brand-stone)] bg-white p-5">
@@ -29,6 +33,7 @@
                     <th class="p-4">{{ __('site.booking_type') }}</th>
                     <th class="p-4">{{ __('site.access_code') }}</th>
                     <th class="p-4">{{ __('site.price_label') }}</th>
+                    <th class="p-4"></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -41,9 +46,17 @@
                         <td class="p-4">{{ $booking->booking_type }}</td>
                         <td class="p-4 font-bold">{{ $booking->accessCode?->code ?? '-' }}</td>
                         <td class="p-4">{{ $booking->formatted_price }}</td>
+                        <td class="p-4 text-right">
+                            @if ($booking->canBeCancelledByCustomer())
+                                <form method="POST" action="{{ route('account.bookings.cancel', $booking) }}">
+                                    @csrf
+                                    <button class="btn-secondary" type="submit">{{ __('site.cancel_booking') }}</button>
+                                </form>
+                            @endif
+                        </td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" class="p-4 text-neutral-600">{{ __('site.no_bookings') }}</td></tr>
+                    <tr><td colspan="8" class="p-4 text-neutral-600">{{ __('site.no_bookings') }}</td></tr>
                 @endforelse
                 </tbody>
             </table>

@@ -42,6 +42,18 @@
         </div>
     </section>
 
+    <section class="section py-14">
+        <h2 class="text-3xl font-black">{{ __('site.how_it_works_title') }}</h2>
+        <div class="mt-8 grid gap-4 md:grid-cols-4">
+            @foreach ([__('site.how_it_works_account'), __('site.how_it_works_book'), __('site.how_it_works_access'), __('site.how_it_works_train')] as $index => $step)
+                <div class="rounded-lg border border-[var(--brand-stone)] bg-white p-5">
+                    <span class="flex h-10 w-10 items-center justify-center rounded bg-[var(--brand-ink)] text-sm font-black text-white">{{ $index + 1 }}</span>
+                    <p class="mt-4 font-bold">{{ $step }}</p>
+                </div>
+            @endforeach
+        </div>
+    </section>
+
     <section id="faq" class="section py-14">
         <h2 class="text-3xl font-black">{{ __('site.faq_title') }}</h2>
         <div class="mt-6 grid gap-4 md:grid-cols-2">

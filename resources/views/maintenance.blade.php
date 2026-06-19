@@ -11,6 +11,7 @@
 <main class="flex min-h-screen items-center justify-center bg-white px-6 text-center">
     <div>
         <img src="{{ asset('brand/logo.png') }}" alt="Dream Gym" class="mx-auto h-28 w-auto">
+        <p class="mt-6 text-lg font-semibold text-neutral-700">Estamos a preparar tudo para sí.</p>
     </div>
 </main>
 </body>

@@ -38,3 +38,4 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [CustomerAuthController::class, 'logout'])->middleware('auth')->name('logout');
 Route::get('/account', [AccountController::class, 'dashboard'])->middleware('auth')->name('account.dashboard');
+Route::post('/account/bookings/{booking}/cancel', [AccountController::class, 'cancelBooking'])->middleware('auth')->name('account.bookings.cancel');

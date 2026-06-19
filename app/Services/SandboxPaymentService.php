@@ -23,6 +23,7 @@ class SandboxPaymentService
                 'amount_cents' => $booking->price_cents,
                 'currency' => $booking->currency,
                 'status' => 'pending',
+                'terms_accepted_at' => $booking->terms_accepted_at,
                 'metadata' => ['label' => 'Multibanco / MB Way sandbox placeholder'],
             ]
         );
@@ -41,6 +42,7 @@ class SandboxPaymentService
                 'status' => Booking::STATUS_CONFIRMED,
                 'payment_status' => 'paid',
                 'payment_reference' => $payment->reference,
+                'terms_accepted_at' => $booking->terms_accepted_at ?? $payment->terms_accepted_at,
                 'confirmed_at' => now(),
             ]);
 

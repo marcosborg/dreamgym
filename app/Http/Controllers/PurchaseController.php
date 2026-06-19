@@ -89,7 +89,15 @@ class PurchaseController extends Controller
 
     public function complete(Payment $payment, SandboxPaymentService $payments): RedirectResponse
     {
+        request()->validate([
+            'terms_accepted' => ['accepted'],
+        ]);
+
         abort_unless($payment->user_id === Auth::id(), 403);
+
+        $payment->update([
+            'terms_accepted_at' => $payment->terms_accepted_at ?? now(),
+        ]);
 
         $payments->completePurchase($payment);
 
