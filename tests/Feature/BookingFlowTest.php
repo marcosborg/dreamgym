@@ -279,6 +279,70 @@ class BookingFlowTest extends TestCase
         ])->assertStatus(422);
     }
 
+    public function test_group_booking_reserves_the_full_room_as_one_booking(): void
+    {
+        $room = $this->roomWithHours(capacity: 5);
+
+        $this->post(route('bookings.store'), [
+            'room_id' => $room->id,
+            'starts_at' => '2026-06-08 10:00:00',
+            'booking_type' => Booking::TYPE_GROUP_HOUR,
+            'customer_name' => 'Group Lead',
+            'customer_email' => 'group-capacity@example.test',
+            'bringing_children' => '0',
+        ])->assertRedirect();
+
+        $booking = Booking::firstOrFail();
+
+        $this->assertSame(Booking::TYPE_GROUP_HOUR, $booking->booking_type);
+        $this->assertSame(5, $booking->seats_reserved);
+        $this->assertSame(Booking::PAID_WITH_PAYMENT, $booking->paid_with);
+    }
+
+    public function test_each_confirmed_booking_gets_its_own_access_code(): void
+    {
+        Mail::fake();
+        $room = $this->roomWithHours(capacity: 2);
+
+        foreach (['10:00:00', '11:00:00'] as $index => $time) {
+            $this->post(route('bookings.store'), [
+                'room_id' => $room->id,
+                'starts_at' => "2026-06-08 {$time}",
+                'booking_type' => Booking::TYPE_SINGLE_HOUR,
+                'customer_name' => "Customer {$time}",
+                'customer_email' => "customer-{$index}@example.test",
+                'bringing_children' => '0',
+            ])->assertRedirect();
+
+            $booking = Booking::query()->latest('id')->firstOrFail();
+
+            $this->post(route('checkout.complete', $booking), [
+                'terms_accepted' => '1',
+            ])->assertRedirect(route('booking.confirmed', $booking));
+        }
+
+        $codes = AccessCode::query()->orderBy('booking_id')->get();
+
+        $this->assertCount(2, $codes);
+        $this->assertNotSame($codes[0]->booking_id, $codes[1]->booking_id);
+        $this->assertNotSame($codes[0]->code, $codes[1]->code);
+    }
+
+    public function test_booking_page_has_actionable_plan_cards_and_children_markup(): void
+    {
+        $this->roomWithHours(capacity: 5);
+
+        $response = $this->get(route('bookings.index'));
+
+        $response->assertOk()
+            ->assertSee('data-booking-type="single_hour"', false)
+            ->assertSee('data-booking-type="group_hour"', false)
+            ->assertSee('data-product-id=', false)
+            ->assertSee('Até 5 pessoas')
+            ->assertSee('id="children-responsibility"', false)
+            ->assertSee('no-underline decoration-transparent', false);
+    }
+
     public function test_session_pack_purchase_adds_credits_and_booking_consumes_one(): void
     {
         $room = $this->roomWithHours();

@@ -117,4 +117,7 @@ return [
     'cancellation_policy_short' => 'Cancelamentos até 24 horas antes devolvem o crédito; depois desse prazo a sessão é perdida.',
     'cancel_booking' => 'Cancelar',
     'booking_cancelled' => 'Reserva cancelada.',
+    'access_code_unique_per_booking' => 'Este código é único para esta reserva e só funciona dentro da janela horária indicada.',
+    'up_to_people' => 'Até :count pessoas',
+    'group_capacity' => 'Capacidade do grupo',
 ];

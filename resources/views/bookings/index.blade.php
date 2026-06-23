@@ -4,12 +4,19 @@
     <section class="section py-10">
         <h1 class="text-4xl font-black">{{ __('site.booking_title') }}</h1>
         <div class="mt-6 grid gap-3 md:grid-cols-3">
-            <a href="#booking-form" class="rounded-lg border border-[var(--brand-ink)] bg-[var(--brand-ink)] p-4 text-white">
+            <a href="#booking-form" data-plan-card data-booking-type="single_hour" class="rounded-lg border border-[var(--brand-ink)] bg-[var(--brand-ink)] p-4 text-white">
                 <span class="block text-sm text-white/75">{{ __('site.option_book_hour') }}</span>
                 <strong class="mt-1 block text-2xl">{{ number_format($products['single_hour']['price_cents'] / 100, 2, ',', ' ') }} {{ $products['single_hour']['currency'] }}</strong>
             </a>
+            @if ($products['group_hour']['active'])
+                <a href="#booking-form" data-plan-card data-booking-type="group_hour" class="rounded-lg border border-[var(--brand-stone)] bg-white p-4">
+                    <span class="block text-sm text-neutral-500">{{ $products['group_hour']['name'] }}</span>
+                    <strong class="mt-1 block text-2xl">{{ number_format($products['group_hour']['price_cents'] / 100, 2, ',', ' ') }} {{ $products['group_hour']['currency'] }}</strong>
+                    <span class="mt-1 block text-sm text-neutral-600">{{ __('site.up_to_people', ['count' => $products['group_hour']['seats'] ?? $room->capacity]) }}</span>
+                </a>
+            @endif
             @foreach ($purchaseProducts as $product)
-                <a href="#purchase-form" class="rounded-lg border border-[var(--brand-stone)] bg-white p-4">
+                <a href="#purchase-form" data-plan-card data-product-id="{{ $product['id'] }}" class="rounded-lg border border-[var(--brand-stone)] bg-white p-4">
                     <span class="block text-sm text-neutral-500">{{ $product['name'] }}</span>
                     <strong class="mt-1 block text-2xl">{{ number_format($product['price_cents'] / 100, 2, ',', ' ') }} {{ $product['currency'] }}</strong>
                 </a>
@@ -57,7 +64,7 @@
                                 <label class="rounded border border-[var(--brand-stone)] p-3 text-sm font-semibold">
                                     <input type="radio" name="booking_type" value="group_hour">
                                     {{ __('site.group_hour') }}
-                                    <span class="block text-xs font-normal text-neutral-600">{{ number_format($products['group_hour']['price_cents'] / 100, 2, ',', ' ') }} {{ $products['group_hour']['currency'] }}</span>
+                                    <span class="block text-xs font-normal text-neutral-600">{{ number_format($products['group_hour']['price_cents'] / 100, 2, ',', ' ') }} {{ $products['group_hour']['currency'] }} · {{ __('site.up_to_people', ['count' => $products['group_hour']['seats'] ?? $room->capacity]) }}</span>
                                 </label>
                             @endif
                         </div>
@@ -78,10 +85,12 @@
                             </label>
                         </div>
                     </fieldset>
-                    <label id="children-responsibility" class="hidden rounded border border-[var(--brand-stone)] p-3 text-sm font-semibold">
-                        <input type="checkbox" name="children_responsibility_accepted" value="1">
-                        {{ __('site.children_responsibility_acceptance') }}
-                    </label>
+                    <div id="children-responsibility" class="hidden rounded border border-[var(--brand-stone)] p-3 text-sm font-semibold">
+                        <label class="flex items-start gap-2">
+                            <input class="mt-1" type="checkbox" name="children_responsibility_accepted" value="1">
+                            <span class="no-underline decoration-transparent">{{ __('site.children_responsibility_acceptance') }}</span>
+                        </label>
+                    </div>
                     <label class="flex items-start gap-2 text-sm font-bold">
                         <input type="checkbox" name="terms_accepted" value="1">
                         <span>{!! __('site.terms_acceptance_html', ['url' => route('legal.terms')]) !!}</span>
@@ -142,6 +151,30 @@
         @endif
     </section>
     <script>
+        const selectedPlanClasses = ['border-[var(--brand-blue)]', 'ring-2', 'ring-[var(--brand-blue)]'];
+
+        document.querySelectorAll('[data-plan-card]').forEach((card) => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('[data-plan-card]').forEach((item) => item.classList.remove(...selectedPlanClasses));
+                card.classList.add(...selectedPlanClasses);
+
+                const bookingType = card.dataset.bookingType;
+                const productId = card.dataset.productId;
+
+                if (bookingType) {
+                    document.querySelector(`input[name="booking_type"][value="${bookingType}"]`)?.click();
+                    document.getElementById('booking-form')?.classList.add(...selectedPlanClasses);
+                    window.setTimeout(() => document.getElementById('booking-form')?.classList.remove(...selectedPlanClasses), 1400);
+                }
+
+                if (productId) {
+                    document.querySelector(`input[name="product_id"][value="${productId}"]`)?.click();
+                    document.getElementById('purchase-form')?.classList.add(...selectedPlanClasses);
+                    window.setTimeout(() => document.getElementById('purchase-form')?.classList.remove(...selectedPlanClasses), 1400);
+                }
+            });
+        });
+
         document.querySelectorAll('[data-children-toggle]').forEach((input) => {
             input.addEventListener('change', () => {
                 const field = document.getElementById('children-responsibility');

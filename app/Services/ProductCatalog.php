@@ -163,7 +163,7 @@ class ProductCatalog
             'currency' => $product->currency ?: $room->currency,
             'credits' => $product->credits,
             'days' => $product->days,
-            'seats' => $product->seats,
+            'seats' => $product->seats ?: ($product->type === self::GROUP_HOUR ? $room->capacity : null),
         ];
     }
 }

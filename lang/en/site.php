@@ -117,4 +117,7 @@ return [
     'cancellation_policy_short' => 'Cancellations up to 24 hours before return the credit; after that deadline the session is lost.',
     'cancel_booking' => 'Cancel',
     'booking_cancelled' => 'Booking cancelled.',
+    'access_code_unique_per_booking' => 'This code is unique to this booking and only works within the time window shown.',
+    'up_to_people' => 'Up to :count people',
+    'group_capacity' => 'Group capacity',
 ];
