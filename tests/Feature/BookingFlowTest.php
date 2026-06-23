@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Resources\AccessCodes\Pages\ListAccessCodes;
 use App\Mail\BookingConfirmed;
 use App\Models\AccessCode;
 use App\Models\BlackoutPeriod;
@@ -11,9 +12,12 @@ use App\Models\Payment;
 use App\Models\Room;
 use App\Models\User;
 use App\Services\AvailabilityService;
+use App\Services\Locks\LockProvider;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Livewire\Livewire;
+use RuntimeException;
 use Tests\TestCase;
 
 class BookingFlowTest extends TestCase
@@ -80,7 +84,7 @@ class BookingFlowTest extends TestCase
     public function test_customer_account_shows_booking_history(): void
     {
         $room = $this->roomWithHours();
-        $user = \App\Models\User::create([
+        $user = User::create([
             'name' => 'Customer',
             'email' => 'customer@example.test',
             'password' => 'password',
@@ -326,6 +330,83 @@ class BookingFlowTest extends TestCase
         $this->assertCount(2, $codes);
         $this->assertNotSame($codes[0]->booking_id, $codes[1]->booking_id);
         $this->assertNotSame($codes[0]->code, $codes[1]->code);
+    }
+
+    public function test_lock_provider_failure_does_not_cancel_booking_or_remove_pin(): void
+    {
+        Mail::fake();
+        $room = $this->roomWithHours();
+
+        $this->app->bind(LockProvider::class, fn () => new class implements LockProvider
+        {
+            public function provisionTemporaryPin(AccessCode $accessCode): AccessCode
+            {
+                throw new RuntimeException('Lock gateway unavailable');
+            }
+        });
+
+        $this->post(route('bookings.store'), [
+            'room_id' => $room->id,
+            'starts_at' => '2026-06-08 10:00:00',
+            'booking_type' => Booking::TYPE_SINGLE_HOUR,
+            'customer_name' => 'Failing Lock',
+            'customer_email' => 'lock-fail@example.test',
+            'bringing_children' => '0',
+        ])->assertRedirect();
+
+        $booking = Booking::firstOrFail();
+
+        $this->post(route('checkout.complete', $booking), [
+            'terms_accepted' => '1',
+        ])->assertRedirect(route('booking.confirmed', $booking));
+
+        $booking->refresh();
+
+        $this->assertSame(Booking::STATUS_CONFIRMED, $booking->status);
+        $this->assertNotNull($booking->accessCode);
+        $this->assertSame(AccessCode::FAILED, $booking->accessCode->provision_status);
+        $this->assertSame('Lock gateway unavailable', $booking->accessCode->lock_response_log['error']);
+    }
+
+    public function test_admin_can_mark_access_code_as_manually_configured(): void
+    {
+        $room = $this->roomWithHours();
+        $admin = User::create([
+            'name' => 'Admin',
+            'email' => 'admin@example.test',
+            'password' => 'password',
+            'is_admin' => true,
+        ]);
+        $booking = Booking::create([
+            'room_id' => $room->id,
+            'customer_name' => 'Manual Customer',
+            'customer_email' => 'manual@example.test',
+            'locale' => 'pt',
+            'starts_at' => '2026-06-08 10:00:00',
+            'ends_at' => '2026-06-08 11:00:00',
+            'status' => 'confirmed',
+            'payment_status' => 'paid',
+            'price_cents' => 1200,
+            'currency' => 'EUR',
+        ]);
+        $accessCode = AccessCode::create([
+            'booking_id' => $booking->id,
+            'code' => '654321',
+            'valid_from' => '2026-06-08 09:55:00',
+            'valid_until' => '2026-06-08 11:05:00',
+            'provision_status' => AccessCode::PENDING_MANUAL,
+            'lock_response_log' => ['driver' => 'manual_ihr'],
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(ListAccessCodes::class)
+            ->callTableAction('markManuallyConfigured', $accessCode);
+
+        $accessCode->refresh();
+
+        $this->assertSame(AccessCode::PROVISIONED, $accessCode->provision_status);
+        $this->assertNotNull($accessCode->provisioned_at);
+        $this->assertArrayHasKey('manual_configured_at', $accessCode->lock_response_log);
     }
 
     public function test_booking_page_has_actionable_plan_cards_and_children_markup(): void

@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Mail\BookingConfirmed;
 use App\Models\Booking;
 use App\Models\Payment;
-use App\Services\ProductCatalog;
+use App\Services\Locks\LockProvisioningService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -47,7 +47,7 @@ class SandboxPaymentService
             ]);
 
             $accessCode = app(AccessCodeService::class)->createForBooking($booking);
-            app(SimulatedLockService::class)->provision($accessCode);
+            app(LockProvisioningService::class)->provision($accessCode);
 
             Mail::to($booking->customer_email)->send(new BookingConfirmed($booking->fresh(['room', 'accessCode'])));
 
@@ -65,7 +65,7 @@ class SandboxPaymentService
             ]);
 
             $accessCode = app(AccessCodeService::class)->createForBooking($booking);
-            app(SimulatedLockService::class)->provision($accessCode);
+            app(LockProvisioningService::class)->provision($accessCode);
 
             Mail::to($booking->customer_email)->send(new BookingConfirmed($booking->fresh(['room', 'accessCode'])));
 

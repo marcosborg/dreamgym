@@ -7,6 +7,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AccessCode extends Model
 {
+    public const PENDING = 'pending';
+
+    public const PENDING_MANUAL = 'pending_manual';
+
+    public const PROVISIONED = 'provisioned';
+
+    public const FAILED = 'failed';
+
     protected $fillable = [
         'booking_id',
         'code',
