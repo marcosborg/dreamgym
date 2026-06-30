@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Payment;
 use App\Models\Room;
+use App\Models\User;
+use App\Services\Payments\IfthenpayPaymentService;
+use App\Services\Payments\PaymentProvider;
 use App\Services\ProductCatalog;
 use App\Services\SandboxPaymentService;
 use Illuminate\Http\RedirectResponse;
@@ -13,11 +16,10 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
-use App\Models\User;
 
 class PurchaseController extends Controller
 {
-    public function store(Request $request, ProductCatalog $catalog): RedirectResponse
+    public function store(Request $request, ProductCatalog $catalog, PaymentProvider $provider, IfthenpayPaymentService $ifthenpay): RedirectResponse
     {
         $rules = [
             'product_id' => ['nullable', 'integer'],
@@ -65,43 +67,70 @@ class PurchaseController extends Controller
 
         abort_unless($product && $product['active'], 422, __('site.product_unavailable'));
 
-        $payment = Payment::create([
-            'user_id' => $user->id,
-            'product_type' => $product['type'],
-            'provider' => 'sandbox_mbway_placeholder',
-            'reference' => 'DG-' . Str::upper(Str::random(10)),
-            'amount_cents' => $product['price_cents'],
-            'currency' => $product['currency'] ?? $room->currency,
-            'status' => 'pending',
-            'metadata' => [
-                'product_id' => $product['id'],
-                'label' => $product['name'],
-                'credits' => $product['credits'] ?? null,
-                'days' => $product['days'] ?? null,
-            ],
-        ]);
+        $payment = $provider->isIfthenpay()
+            ? $ifthenpay->createPurchasePayment($user, $product, $room)
+            : Payment::create([
+                'user_id' => $user->id,
+                'product_type' => $product['type'],
+                'provider' => 'sandbox_mbway_placeholder',
+                'reference' => 'DG-'.Str::upper(Str::random(10)),
+                'amount_cents' => $product['price_cents'],
+                'currency' => $product['currency'] ?? $room->currency,
+                'status' => 'pending',
+                'metadata' => [
+                    'product_id' => $product['id'],
+                    'label' => $product['name'],
+                    'credits' => $product['credits'] ?? null,
+                    'days' => $product['days'] ?? null,
+                ],
+            ]);
 
         return redirect()->route('purchase.checkout', $payment);
     }
 
-    public function checkout(Payment $payment): View
+    public function checkout(Payment $payment, PaymentProvider $provider): View
     {
         abort_unless($payment->user_id === Auth::id(), 403);
 
-        return view('purchases.checkout', compact('payment'));
+        return view('purchases.checkout', [
+            'payment' => $payment,
+            'paymentProvider' => $provider->isIfthenpay() ? 'ifthenpay' : 'sandbox',
+        ]);
     }
 
-    public function complete(Payment $payment, SandboxPaymentService $payments): RedirectResponse
+    public function complete(Payment $payment, SandboxPaymentService $payments, IfthenpayPaymentService $ifthenpay, PaymentProvider $provider): RedirectResponse
     {
-        request()->validate([
+        $rules = [
             'terms_accepted' => ['accepted'],
-        ]);
+        ];
+
+        if ($provider->isIfthenpay()) {
+            $rules['payment_method'] = ['required', 'in:multibanco,mbway'];
+            $rules['mbway_phone'] = ['required_if:payment_method,mbway', 'nullable', 'string', 'max:30'];
+        }
+
+        $data = request()->validate($rules);
 
         abort_unless($payment->user_id === Auth::id(), 403);
 
         $payment->update([
             'terms_accepted_at' => $payment->terms_accepted_at ?? now(),
         ]);
+
+        if ($provider->isIfthenpay()) {
+            try {
+                $ifthenpay->initialize($payment, $data['payment_method'], $data['mbway_phone'] ?? null);
+            } catch (\Throwable $exception) {
+                $ifthenpay->markInitializationFailure($payment, $exception);
+
+                return back()->withErrors([
+                    'payment_method' => __('site.payment_initialization_failed'),
+                ])->withInput();
+            }
+
+            return redirect()->route('purchase.checkout', $payment)
+                ->with('status', __('site.payment_pending_confirmation'));
+        }
 
         $payments->completePurchase($payment);
 

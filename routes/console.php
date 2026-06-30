@@ -1,8 +1,9 @@
 <?php
 
+use App\Services\Payments\IfthenpayGatewayFactory;
+use App\Services\SandboxDatabaseRefreshService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
-use App\Services\SandboxDatabaseRefreshService;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -26,3 +27,31 @@ Artisan::command('db:refresh-sandbox {--yes : Skip confirmation} {--keep-dump : 
         dumpPath: $this->option('dump-path') ?: null,
     );
 })->purpose('Refresh the sandbox database from a safe production dump');
+
+Artisan::command('ifthenpay:register-webhooks {--url= : Public callback URL, defaults to route(ifthenpay.callback)} {--method=all : all, multibanco, or mbway}', function (IfthenpayGatewayFactory $factory) {
+    $url = $this->option('url') ?: route('ifthenpay.callback');
+    $method = $this->option('method');
+    $gateway = $factory->make();
+
+    if (! str_starts_with($url, 'https://')) {
+        $this->warn('The callback URL should be public HTTPS before using this in production.');
+    }
+
+    if (in_array($method, ['all', 'multibanco'], true)) {
+        $registered = $gateway->multibancoDynamic()->registerWebhook($url);
+        $this->info('Multibanco webhook registered: '.$registered);
+    }
+
+    if (in_array($method, ['all', 'mbway'], true)) {
+        $registered = $gateway->mbway()->registerWebhook($url);
+        $this->info('MB WAY webhook registered: '.$registered);
+    }
+
+    if (! in_array($method, ['all', 'multibanco', 'mbway'], true)) {
+        $this->error('Invalid method. Use all, multibanco, or mbway.');
+
+        return 1;
+    }
+
+    return 0;
+})->purpose('Register ifthenpay Multibanco/MB WAY callback URLs');

@@ -29,6 +29,7 @@
         <env name="DB_USERNAME" value="root"/>
         <env name="DB_PASSWORD" value="root"/>
         <env name="MAIL_MAILER" value="array"/>
+        <env name="PAYMENT_PROVIDER" value="sandbox"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
