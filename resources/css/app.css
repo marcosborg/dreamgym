@@ -78,3 +78,70 @@ body {
     width: min(1120px, calc(100% - 2rem));
     margin: 0 auto;
 }
+
+.option-card {
+    position: relative;
+    display: block;
+    border: 1px solid var(--brand-stone);
+    border-radius: .5rem;
+    background: white;
+    color: var(--brand-ink);
+    padding: 1rem;
+    transition: border-color .15s ease, background-color .15s ease, color .15s ease, box-shadow .15s ease;
+}
+
+.option-card:hover,
+.option-card.is-selected {
+    border-color: var(--brand-blue);
+    box-shadow: 0 0 0 3px rgba(8, 112, 173, .12);
+}
+
+.option-card.is-selected {
+    background: var(--brand-ink);
+    color: white;
+}
+
+.option-card.is-selected span {
+    color: rgba(255, 255, 255, .78);
+}
+
+.option-choice {
+    position: relative;
+    display: block;
+    cursor: pointer;
+    border: 1px solid var(--brand-stone);
+    border-radius: .5rem;
+    background: white;
+    padding: .75rem .75rem .75rem 2.25rem;
+    font-size: .875rem;
+    font-weight: 700;
+    transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
+}
+
+.option-choice.is-selected {
+    border-color: var(--brand-blue);
+    background: var(--brand-cream);
+    box-shadow: 0 0 0 3px rgba(8, 112, 173, .12);
+}
+
+.option-marker {
+    position: absolute;
+    top: .9rem;
+    right: .9rem;
+    width: .75rem;
+    height: .75rem;
+    border: 2px solid currentColor;
+    border-radius: 999px;
+    opacity: .45;
+}
+
+.option-choice .option-marker {
+    left: .9rem;
+    right: auto;
+}
+
+.is-selected > .option-marker {
+    background: var(--brand-blue);
+    border-color: var(--brand-blue);
+    opacity: 1;
+}

@@ -1,22 +1,38 @@
 @extends('layouts.public')
 
 @section('content')
+    @php
+        $defaultPurchaseProduct = $purchaseProducts->first();
+    @endphp
+
     <section class="section py-10">
         <h1 class="text-4xl font-black">{{ __('site.booking_title') }}</h1>
-        <div class="mt-6 grid gap-3 md:grid-cols-3">
-            <a href="#booking-form" data-plan-card data-booking-type="single_hour" class="rounded-lg border border-[var(--brand-ink)] bg-[var(--brand-ink)] p-4 text-white">
+        <div class="mt-6 grid gap-3 md:grid-cols-4">
+            <a href="#booking-form" data-booking-card data-booking-type="single_hour" data-select-booking-type="single_hour" class="option-card is-selected">
+                <span class="option-marker" aria-hidden="true"></span>
                 <span class="block text-sm text-white/75">{{ __('site.option_book_hour') }}</span>
                 <strong class="mt-1 block text-2xl">{{ number_format($products['single_hour']['price_cents'] / 100, 2, ',', ' ') }} {{ $products['single_hour']['currency'] }}</strong>
             </a>
             @if ($products['group_hour']['active'])
-                <a href="#booking-form" data-plan-card data-booking-type="group_hour" class="rounded-lg border border-[var(--brand-stone)] bg-white p-4">
+                <a href="#booking-form" data-booking-card data-booking-type="group_hour" data-select-booking-type="group_hour" class="option-card">
+                    <span class="option-marker" aria-hidden="true"></span>
                     <span class="block text-sm text-neutral-500">{{ $products['group_hour']['name'] }}</span>
                     <strong class="mt-1 block text-2xl">{{ number_format($products['group_hour']['price_cents'] / 100, 2, ',', ' ') }} {{ $products['group_hour']['currency'] }}</strong>
                     <span class="mt-1 block text-sm text-neutral-600">{{ __('site.up_to_people', ['count' => $products['group_hour']['seats'] ?? $room->capacity]) }}</span>
                 </a>
             @endif
             @foreach ($purchaseProducts as $product)
-                <a href="#purchase-form" data-plan-card data-product-id="{{ $product['id'] }}" class="rounded-lg border border-[var(--brand-stone)] bg-white p-4">
+                <a
+                    href="#purchase-form"
+                    data-product-card
+                    data-product-id="{{ $product['id'] }}"
+                    data-select-product="{{ $product['id'] }}"
+                    data-product-name="{{ $product['name'] }}"
+                    data-product-detail="@if ($product['credits']) {{ $product['credits'] }} {{ __('site.sessions') }} @elseif ($product['days']) {{ $product['days'] }} {{ __('site.days') }} @endif"
+                    data-product-price="{{ number_format($product['price_cents'] / 100, 2, ',', ' ') }} {{ $product['currency'] }}"
+                    class="option-card"
+                >
+                    <span class="option-marker" aria-hidden="true"></span>
                     <span class="block text-sm text-neutral-500">{{ $product['name'] }}</span>
                     <strong class="mt-1 block text-2xl">{{ number_format($product['price_cents'] / 100, 2, ',', ' ') }} {{ $product['currency'] }}</strong>
                 </a>
@@ -56,13 +72,15 @@
                     <fieldset>
                         <legend class="text-sm font-bold">{{ __('site.booking_type') }}</legend>
                         <div class="mt-2 grid gap-2 sm:grid-cols-2">
-                            <label class="rounded border border-[var(--brand-stone)] p-3 text-sm font-semibold">
-                                <input type="radio" name="booking_type" value="single_hour" checked>
+                            <label data-booking-option="single_hour" class="option-choice is-selected">
+                                <input type="radio" name="booking_type" value="single_hour" class="sr-only" checked>
+                                <span class="option-marker" aria-hidden="true"></span>
                                 {{ __('site.single_hour') }}
                             </label>
                             @if ($products['group_hour']['active'])
-                                <label class="rounded border border-[var(--brand-stone)] p-3 text-sm font-semibold">
-                                    <input type="radio" name="booking_type" value="group_hour">
+                                <label data-booking-option="group_hour" class="option-choice">
+                                    <input type="radio" name="booking_type" value="group_hour" class="sr-only">
+                                    <span class="option-marker" aria-hidden="true"></span>
                                     {{ __('site.group_hour') }}
                                     <span class="block text-xs font-normal text-neutral-600">{{ number_format($products['group_hour']['price_cents'] / 100, 2, ',', ' ') }} {{ $products['group_hour']['currency'] }} · {{ __('site.up_to_people', ['count' => $products['group_hour']['seats'] ?? $room->capacity]) }}</span>
                                 </label>
@@ -116,20 +134,24 @@
             <form id="purchase-form" method="POST" action="{{ route('purchase.store') }}" class="mt-10 max-w-3xl rounded-lg border border-[var(--brand-stone)] bg-white p-6">
                 @csrf
                 <h2 class="text-xl font-black">{{ __('site.buy_pack_or_membership') }}</h2>
-                <div class="mt-5 grid gap-3 sm:grid-cols-2">
+                <div class="mt-5 rounded-lg border border-[var(--brand-blue)] bg-[var(--brand-cream)] p-4" data-product-summary>
+                    <span class="block text-sm font-semibold text-neutral-600">{{ __('site.product') }}</span>
+                    <strong class="mt-1 block text-xl" data-product-summary-name>{{ $defaultPurchaseProduct['name'] ?? '' }}</strong>
+                    <span class="block text-sm text-neutral-700" data-product-summary-detail>
+                        @if ($defaultPurchaseProduct)
+                            @if ($defaultPurchaseProduct['credits'])
+                                {{ $defaultPurchaseProduct['credits'] }} {{ __('site.sessions') }} ·
+                            @elseif ($defaultPurchaseProduct['days'])
+                                {{ $defaultPurchaseProduct['days'] }} {{ __('site.days') }} ·
+                            @endif
+                            {{ number_format($defaultPurchaseProduct['price_cents'] / 100, 2, ',', ' ') }} {{ $defaultPurchaseProduct['currency'] }}
+                        @endif
+                    </span>
+                </div>
+
+                <div class="hidden">
                     @foreach ($purchaseProducts as $product)
-                        <label class="rounded border border-[var(--brand-stone)] p-4">
-                            <input type="radio" name="product_id" value="{{ $product['id'] }}" required>
-                            <span class="ml-1 font-bold">{{ $product['name'] }}</span>
-                            <span class="block text-sm text-neutral-600">
-                                @if ($product['credits'])
-                                    {{ $product['credits'] }} {{ __('site.sessions') }} ·
-                                @elseif ($product['days'])
-                                    {{ $product['days'] }} {{ __('site.days') }} ·
-                                @endif
-                                {{ number_format($product['price_cents'] / 100, 2, ',', ' ') }} {{ $product['currency'] }}
-                            </span>
-                        </label>
+                        <input type="radio" name="product_id" value="{{ $product['id'] }}" required @checked(($defaultPurchaseProduct['id'] ?? null) === $product['id'])>
                     @endforeach
                 </div>
 
@@ -150,43 +172,4 @@
             </form>
         @endif
     </section>
-    <script>
-        const selectedPlanClasses = ['border-[var(--brand-blue)]', 'ring-2', 'ring-[var(--brand-blue)]'];
-
-        document.querySelectorAll('[data-plan-card]').forEach((card) => {
-            card.addEventListener('click', () => {
-                document.querySelectorAll('[data-plan-card]').forEach((item) => item.classList.remove(...selectedPlanClasses));
-                card.classList.add(...selectedPlanClasses);
-
-                const bookingType = card.dataset.bookingType;
-                const productId = card.dataset.productId;
-
-                if (bookingType) {
-                    document.querySelector(`input[name="booking_type"][value="${bookingType}"]`)?.click();
-                    document.getElementById('booking-form')?.classList.add(...selectedPlanClasses);
-                    window.setTimeout(() => document.getElementById('booking-form')?.classList.remove(...selectedPlanClasses), 1400);
-                }
-
-                if (productId) {
-                    document.querySelector(`input[name="product_id"][value="${productId}"]`)?.click();
-                    document.getElementById('purchase-form')?.classList.add(...selectedPlanClasses);
-                    window.setTimeout(() => document.getElementById('purchase-form')?.classList.remove(...selectedPlanClasses), 1400);
-                }
-            });
-        });
-
-        document.querySelectorAll('[data-children-toggle]').forEach((input) => {
-            input.addEventListener('change', () => {
-                const field = document.getElementById('children-responsibility');
-                const checkbox = field.querySelector('input[type="checkbox"]');
-                const isVisible = document.querySelector('[name="bringing_children"]:checked')?.value === '1';
-
-                field.classList.toggle('hidden', ! isVisible);
-                checkbox.required = isVisible;
-                if (! isVisible) {
-                    checkbox.checked = false;
-                }
-            });
-        });
-    </script>
 @endsection
