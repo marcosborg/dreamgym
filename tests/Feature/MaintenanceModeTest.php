@@ -18,7 +18,7 @@ class MaintenanceModeTest extends TestCase
 
         $this->get('/')
             ->assertStatus(503)
-            ->assertSee('Estamos a preparar tudo para sí.')
+            ->assertDontSee('Estamos a preparar tudo')
             ->assertSee('brand/logo.png');
     }
 
