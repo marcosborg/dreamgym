@@ -58,6 +58,26 @@ class AdminSmokeTest extends TestCase
             ->assertOk();
     }
 
+    public function test_authenticated_admin_personal_trainers_page_loads(): void
+    {
+        $user = $this->adminUser('personal-trainers-admin@example.test');
+
+        $this->actingAs($user)
+            ->get('/admin/personal-trainers')
+            ->assertOk()
+            ->assertSee('Personal Trainer');
+    }
+
+    public function test_authenticated_admin_products_page_shows_generic_validity_copy(): void
+    {
+        $user = $this->adminUser('products-validity-admin@example.test');
+
+        $this->actingAs($user)
+            ->get('/admin/products/create')
+            ->assertOk()
+            ->assertSee('Pode ser definido em qualquer produto');
+    }
+
     public function test_customer_cannot_access_admin_dashboard(): void
     {
         $user = User::create([

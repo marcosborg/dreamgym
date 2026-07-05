@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (shouldScroll) {
-            document.getElementById('purchase-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.getElementById('purchase-details')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     };
 

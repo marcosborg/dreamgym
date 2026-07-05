@@ -9,7 +9,7 @@
             @foreach ($sections as $section)
                 <div>
                     <h2 class="text-xl font-black">{{ $section['title'] }}</h2>
-                    <p>{{ $section['body'] }}</p>
+                    <div class="legal-content mt-3">{!! $section['body'] !!}</div>
                 </div>
             @endforeach
         </div>

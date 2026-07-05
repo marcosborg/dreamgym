@@ -156,7 +156,7 @@
                 </div>
 
                 @guest
-                    <div class="mt-5 grid gap-4 sm:grid-cols-2">
+                    <div id="purchase-details" class="mt-5 grid gap-4 sm:grid-cols-2">
                         <label class="block text-sm font-bold">{{ __('site.name') }}<input name="customer_name" class="field mt-1"></label>
                         <label class="block text-sm font-bold">{{ __('site.email') }}<input name="customer_email" type="email" class="field mt-1"></label>
                         <label class="block text-sm font-bold">{{ __('site.phone') }}<input name="customer_phone" class="field mt-1"></label>
@@ -165,7 +165,7 @@
                         <label class="block text-sm font-bold">{{ __('site.password_confirmation') }}<input name="password_confirmation" type="password" class="field mt-1"></label>
                     </div>
                 @else
-                    <p class="mt-5 rounded bg-[var(--brand-cream)] p-3 text-sm">{{ __('site.purchase_will_attach') }}</p>
+                    <p id="purchase-details" class="mt-5 rounded bg-[var(--brand-cream)] p-3 text-sm">{{ __('site.purchase_will_attach') }}</p>
                 @endguest
 
                 <button class="btn-primary mt-6 w-full" type="submit">{{ __('site.continue_payment') }}</button>

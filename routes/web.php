@@ -7,6 +7,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\IfthenpayCallbackController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\PurchaseController;
+use App\Models\LegalTermSection;
 use App\Models\Room;
 use App\Services\LegalTerms;
 use App\Services\ProductCatalog;
@@ -21,10 +22,14 @@ Route::get('/', function (ProductCatalog $catalog) {
 
 Route::get('/terms', function (LegalTerms $terms) {
     return view('legal.terms', [
-        'sections' => $terms->sections(),
+        'sections' => $terms->sections(LegalTermSection::DOCUMENT_TERMS),
     ]);
 })->name('legal.terms');
-Route::view('/privacy', 'legal.privacy')->name('legal.privacy');
+Route::get('/privacy', function (LegalTerms $terms) {
+    return view('legal.privacy', [
+        'sections' => $terms->sections(LegalTermSection::DOCUMENT_PRIVACY),
+    ]);
+})->name('legal.privacy');
 
 Route::get('/book', [BookingController::class, 'index'])->name('bookings.index');
 Route::post('/book', [BookingController::class, 'store'])->name('bookings.store');

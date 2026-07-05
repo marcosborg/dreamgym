@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\LegalTermSections\Schemas;
 
-use Filament\Forms\Components\Textarea;
+use App\Models\LegalTermSection;
+use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
@@ -13,6 +15,14 @@ class LegalTermSectionForm
     {
         return $schema
             ->components([
+                Select::make('document_type')
+                    ->label('Documento')
+                    ->options([
+                        LegalTermSection::DOCUMENT_TERMS => 'Termos e Condições',
+                        LegalTermSection::DOCUMENT_PRIVACY => 'Política de Privacidade',
+                    ])
+                    ->default(LegalTermSection::DOCUMENT_TERMS)
+                    ->required(),
                 TextInput::make('title_pt')
                     ->label('Título PT')
                     ->required()
@@ -21,15 +31,27 @@ class LegalTermSectionForm
                     ->label('Título EN')
                     ->required()
                     ->maxLength(160),
-                Textarea::make('body_pt')
+                RichEditor::make('body_pt')
                     ->label('Texto PT')
                     ->required()
-                    ->rows(5)
+                    ->toolbarButtons([
+                        ['bold', 'italic', 'underline', 'link'],
+                        ['h2', 'h3', 'paragraph', 'blockquote'],
+                        ['bulletList', 'orderedList'],
+                        ['undo', 'redo', 'clearFormatting'],
+                    ])
+                    ->disableFileAttachments()
                     ->columnSpanFull(),
-                Textarea::make('body_en')
+                RichEditor::make('body_en')
                     ->label('Texto EN')
                     ->required()
-                    ->rows(5)
+                    ->toolbarButtons([
+                        ['bold', 'italic', 'underline', 'link'],
+                        ['h2', 'h3', 'paragraph', 'blockquote'],
+                        ['bulletList', 'orderedList'],
+                        ['undo', 'redo', 'clearFormatting'],
+                    ])
+                    ->disableFileAttachments()
                     ->columnSpanFull(),
                 TextInput::make('sort_order')
                     ->label('Ordem')

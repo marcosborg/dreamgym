@@ -7,7 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class LegalTermSection extends Model
 {
+    public const DOCUMENT_TERMS = 'terms';
+
+    public const DOCUMENT_PRIVACY = 'privacy';
+
     protected $fillable = [
+        'document_type',
         'title_pt',
         'body_pt',
         'title_en',
@@ -27,6 +32,11 @@ class LegalTermSection extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
+    }
+
+    public function scopeForDocument(Builder $query, string $documentType): Builder
+    {
+        return $query->where('document_type', $documentType);
     }
 
     public function scopeOrdered(Builder $query): Builder

@@ -23,11 +23,11 @@ class LegalTermSectionResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Administração';
 
-    protected static ?string $navigationLabel = 'Termos e Condições';
+    protected static ?string $navigationLabel = 'Documentos legais';
 
-    protected static ?string $modelLabel = 'Secção dos termos';
+    protected static ?string $modelLabel = 'Secção legal';
 
-    protected static ?string $pluralModelLabel = 'Termos e Condições';
+    protected static ?string $pluralModelLabel = 'Documentos legais';
 
     public static function form(Schema $schema): Schema
     {

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\LegalTermSections\Tables;
+namespace App\Filament\Resources\PersonalTrainers\Tables;
 
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -9,7 +9,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
-class LegalTermSectionsTable
+class PersonalTrainersTable
 {
     public static function configure(Table $table): Table
     {
@@ -17,13 +17,9 @@ class LegalTermSectionsTable
             ->defaultSort('sort_order')
             ->columns([
                 TextColumn::make('sort_order')->label('Ordem')->sortable(),
-                TextColumn::make('document_type')
-                    ->label('Documento')
-                    ->badge()
-                    ->formatStateUsing(fn (string $state): string => $state === 'privacy' ? 'Privacidade' : 'Termos')
-                    ->sortable(),
-                TextColumn::make('title_pt')->label('Título PT')->searchable(),
-                TextColumn::make('title_en')->label('Título EN')->searchable()->toggleable(),
+                TextColumn::make('name')->label('Nome')->searchable()->sortable(),
+                TextColumn::make('email')->label('Email')->searchable()->placeholder('-'),
+                TextColumn::make('phone')->label('Telefone')->searchable()->placeholder('-'),
                 IconColumn::make('is_active')->label('Ativo')->boolean(),
             ])
             ->recordActions([

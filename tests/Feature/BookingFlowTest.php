@@ -9,6 +9,7 @@ use App\Models\BlackoutPeriod;
 use App\Models\Booking;
 use App\Models\OpeningHour;
 use App\Models\Payment;
+use App\Models\Product;
 use App\Models\Room;
 use App\Models\User;
 use App\Services\AvailabilityService;
@@ -424,6 +425,19 @@ class BookingFlowTest extends TestCase
             ->assertSee('no-underline decoration-transparent', false);
     }
 
+    public function test_purchase_products_use_hidden_product_id_without_second_visible_selection(): void
+    {
+        $this->roomWithHours(capacity: 5);
+
+        $response = $this->get(route('bookings.index'));
+
+        $response->assertOk()
+            ->assertSee('data-product-card', false)
+            ->assertSee('name="product_id"', false)
+            ->assertSee('class="hidden"', false)
+            ->assertSee('id="purchase-details"', false);
+    }
+
     public function test_session_pack_purchase_adds_credits_and_booking_consumes_one(): void
     {
         $room = $this->roomWithHours();
@@ -459,6 +473,27 @@ class BookingFlowTest extends TestCase
         $this->assertSame(Booking::PAID_WITH_CREDITS, $booking->paid_with);
         $this->assertSame(0, $booking->price_cents);
         $this->assertSame(9, $user->fresh()->session_credits);
+    }
+
+    public function test_purchase_store_uses_selected_product_id(): void
+    {
+        $this->roomWithHours();
+        $product = Product::query()
+            ->where('type', Product::TYPE_SESSION_PACK)
+            ->firstOrFail();
+
+        $this->post(route('purchase.store'), [
+            'product_id' => $product->id,
+            'customer_name' => 'Selected Product Customer',
+            'customer_email' => 'selected-product@example.test',
+            'password' => 'secret123',
+            'password_confirmation' => 'secret123',
+        ])->assertRedirect();
+
+        $payment = Payment::firstOrFail();
+
+        $this->assertSame($product->id, $payment->metadata['product_id']);
+        $this->assertSame($product->name, $payment->metadata['label']);
     }
 
     public function test_purchase_checkout_requires_terms_acceptance(): void

@@ -145,3 +145,32 @@ body {
     border-color: var(--brand-blue);
     opacity: 1;
 }
+
+.legal-content > * + * {
+    margin-top: 1rem;
+}
+
+.legal-content ul,
+.legal-content ol {
+    padding-left: 1.5rem;
+}
+
+.legal-content ul {
+    list-style: disc;
+}
+
+.legal-content ol {
+    list-style: decimal;
+}
+
+.legal-content a {
+    color: var(--brand-blue);
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+.legal-content blockquote {
+    border-left: 4px solid var(--brand-stone);
+    color: rgb(82 82 82);
+    padding-left: 1rem;
+}

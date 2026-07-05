@@ -43,7 +43,7 @@ class ProductForm
                     ->numeric(),
                 TextInput::make('days')
                     ->label('Dias de validade')
-                    ->helperText('Usado em mensalidades.')
+                    ->helperText('Pode ser definido em qualquer produto para referência administrativa. Nesta fase não altera a expiração funcional de créditos ou reservas.')
                     ->numeric(),
                 TextInput::make('seats')
                     ->label('Lugares')
