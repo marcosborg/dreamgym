@@ -40,7 +40,7 @@ class LegalTermSectionForm
                         ['bulletList', 'orderedList'],
                         ['undo', 'redo', 'clearFormatting'],
                     ])
-                    ->disableFileAttachments()
+                    ->fileAttachments(false)
                     ->columnSpanFull(),
                 RichEditor::make('body_en')
                     ->label('Texto EN')
@@ -51,7 +51,7 @@ class LegalTermSectionForm
                         ['bulletList', 'orderedList'],
                         ['undo', 'redo', 'clearFormatting'],
                     ])
-                    ->disableFileAttachments()
+                    ->fileAttachments(false)
                     ->columnSpanFull(),
                 TextInput::make('sort_order')
                     ->label('Ordem')

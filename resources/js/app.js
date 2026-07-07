@@ -1,10 +1,25 @@
 import './bootstrap';
 
 document.addEventListener('DOMContentLoaded', () => {
+    const bookingFlow = document.querySelector('[data-booking-flow]');
+    const purchaseForm = document.getElementById('purchase-form');
+
+    const showBookingFlow = () => {
+        bookingFlow?.classList.remove('hidden');
+        purchaseForm?.classList.add('hidden');
+    };
+
+    const showPurchaseFlow = () => {
+        bookingFlow?.classList.add('hidden');
+        purchaseForm?.classList.remove('hidden');
+    };
+
     const selectBookingType = (value, shouldScroll = false) => {
         document.querySelectorAll('[data-booking-card]').forEach((card) => {
             card.classList.toggle('is-selected', card.dataset.selectBookingType === value);
         });
+
+        showBookingFlow();
 
         if (shouldScroll) {
             document.querySelectorAll('[data-product-card]').forEach((card) => {
@@ -48,6 +63,8 @@ document.addEventListener('DOMContentLoaded', () => {
             card.classList.remove('is-selected');
         });
 
+        showPurchaseFlow();
+
         document.querySelectorAll('input[name="product_id"]').forEach((input) => {
             input.checked = input.value === value;
         });
@@ -61,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (shouldScroll) {
-            document.getElementById('purchase-details')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            purchaseForm?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     };
 

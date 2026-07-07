@@ -59,6 +59,34 @@
         </div>
     </section>
 
+    @if ($personalTrainers->isNotEmpty())
+        <section class="border-y border-[var(--brand-stone)] bg-white py-14">
+            <div class="section">
+                <h2 class="text-3xl font-black">{{ __('site.personal_trainers_title') }}</h2>
+                <div class="mt-8 grid gap-4 md:grid-cols-3">
+                    @foreach ($personalTrainers as $trainer)
+                        <article class="rounded-lg border border-[var(--brand-stone)] p-5">
+                            <h3 class="text-xl font-black">{{ $trainer->name }}</h3>
+                            @if ($trainer->bio)
+                                <p class="mt-3 leading-7 text-neutral-700">{{ $trainer->bio }}</p>
+                            @endif
+                            @if ($trainer->email || $trainer->phone)
+                                <div class="mt-4 space-y-1 text-sm font-semibold text-neutral-700">
+                                    @if ($trainer->email)
+                                        <div><a class="text-[var(--brand-blue)] underline" href="mailto:{{ $trainer->email }}">{{ $trainer->email }}</a></div>
+                                    @endif
+                                    @if ($trainer->phone)
+                                        <div>{{ $trainer->phone }}</div>
+                                    @endif
+                                </div>
+                            @endif
+                        </article>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+    @endif
+
     <section id="faq" class="section py-14">
         <h2 class="text-3xl font-black">{{ __('site.faq_title') }}</h2>
         <div class="mt-6 grid gap-4 md:grid-cols-2">

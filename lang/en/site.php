@@ -114,6 +114,7 @@ return [
     'how_it_works_access_desc' => 'Automatically receive the access code by email.',
     'how_it_works_train' => 'Train',
     'how_it_works_train_desc' => 'Enter during your booked time and train without interruptions.',
+    'personal_trainers_title' => 'Personal Trainers',
     'cancellation_policy_short' => 'Cancellations up to 24 hours before return the credit; after that deadline the session is lost.',
     'cancel_booking' => 'Cancel',
     'booking_cancelled' => 'Booking cancelled.',

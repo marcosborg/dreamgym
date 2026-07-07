@@ -433,8 +433,10 @@ class BookingFlowTest extends TestCase
 
         $response->assertOk()
             ->assertSee('data-product-card', false)
+            ->assertSee('data-booking-flow', false)
             ->assertSee('name="product_id"', false)
-            ->assertSee('class="hidden"', false)
+            ->assertSee('id="purchase-form"', false)
+            ->assertSee('class="mt-10 hidden', false)
             ->assertSee('id="purchase-details"', false);
     }
 

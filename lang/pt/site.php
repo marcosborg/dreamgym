@@ -114,6 +114,7 @@ return [
     'how_it_works_access_desc' => 'Recebe automaticamente o código de acesso por email.',
     'how_it_works_train' => 'Treinar',
     'how_it_works_train_desc' => 'Entra no horário reservado e treina sem interrupções.',
+    'personal_trainers_title' => 'Personal Trainers',
     'cancellation_policy_short' => 'Cancelamentos até 24 horas antes devolvem o crédito; depois desse prazo a sessão é perdida.',
     'cancel_booking' => 'Cancelar',
     'booking_cancelled' => 'Reserva cancelada.',

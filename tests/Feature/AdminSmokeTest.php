@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\LegalTermSection;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -56,6 +57,25 @@ class AdminSmokeTest extends TestCase
         $this->actingAs($user)
             ->get('/admin/legal-term-sections')
             ->assertOk();
+    }
+
+    public function test_authenticated_admin_can_edit_legal_term_section(): void
+    {
+        $user = $this->adminUser('terms-edit-admin@example.test');
+        $section = LegalTermSection::create([
+            'document_type' => LegalTermSection::DOCUMENT_TERMS,
+            'title_pt' => 'Título PT',
+            'body_pt' => '<p>Texto PT</p>',
+            'title_en' => 'Title EN',
+            'body_en' => '<p>Text EN</p>',
+            'sort_order' => 1,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->get("/admin/legal-term-sections/{$section->id}/edit")
+            ->assertOk()
+            ->assertSee('Texto PT');
     }
 
     public function test_authenticated_admin_personal_trainers_page_loads(): void

@@ -8,6 +8,7 @@ use App\Http\Controllers\IfthenpayCallbackController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\PurchaseController;
 use App\Models\LegalTermSection;
+use App\Models\PersonalTrainer;
 use App\Models\Room;
 use App\Services\LegalTerms;
 use App\Services\ProductCatalog;
@@ -16,8 +17,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function (ProductCatalog $catalog) {
     $room = Room::query()->where('is_active', true)->first();
     $singleHour = $room ? $catalog->singleHour($room) : null;
+    $personalTrainers = PersonalTrainer::query()->active()->ordered()->get();
 
-    return view('home', compact('room', 'singleHour'));
+    return view('home', compact('room', 'singleHour', 'personalTrainers'));
 })->name('home');
 
 Route::get('/terms', function (LegalTerms $terms) {
