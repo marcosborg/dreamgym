@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\PersonalTrainers\Schemas;
 
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -62,5 +64,3 @@ class PersonalTrainerForm
             ->columns(2);
     }
 }
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Select;

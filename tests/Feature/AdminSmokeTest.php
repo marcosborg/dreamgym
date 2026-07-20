@@ -88,6 +88,17 @@ class AdminSmokeTest extends TestCase
             ->assertSee('Personal Trainer');
     }
 
+    public function test_authenticated_admin_can_open_personal_trainer_create_form(): void
+    {
+        $user = $this->adminUser('personal-trainers-create-admin@example.test');
+
+        $this->actingAs($user)
+            ->get('/admin/personal-trainers/create')
+            ->assertOk()
+            ->assertSee('Fotografia')
+            ->assertSee('Conta associada');
+    }
+
     public function test_authenticated_admin_products_page_shows_generic_validity_copy(): void
     {
         $user = $this->adminUser('products-validity-admin@example.test');
