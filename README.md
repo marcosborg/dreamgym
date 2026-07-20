@@ -7,6 +7,18 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Dream Gym deployment
+
+After deploying a release, run the database migrations and ensure the public upload link exists:
+
+```bash
+php artisan migrate --force
+php artisan storage:link
+php artisan optimize
+```
+
+Personal Trainer photographs are stored on the `public` filesystem disk, under `personal-trainers/`.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

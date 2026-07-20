@@ -6,6 +6,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -16,6 +17,7 @@ class PersonalTrainersTable
         return $table
             ->defaultSort('sort_order')
             ->columns([
+                ImageColumn::make('photo_path')->label('Foto')->disk('public')->circular(),
                 TextColumn::make('sort_order')->label('Ordem')->sortable(),
                 TextColumn::make('name')->label('Nome')->searchable()->sortable(),
                 TextColumn::make('email')->label('Email')->searchable()->placeholder('-'),

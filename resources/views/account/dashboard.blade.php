@@ -22,6 +22,24 @@
             </div>
         </div>
 
+        <div class="mt-8 rounded-lg border border-[var(--brand-stone)] bg-white p-6">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-black">{{ __('site.pt_profile_title') }}</h2>
+                    <p class="mt-1 text-sm text-neutral-600">
+                        @if ($trainerSubmission)
+                            {{ __('site.pt_current_status') }}: <strong>{{ $trainerSubmission->statusLabel() }}</strong>
+                        @else
+                            {{ __('site.pt_profile_intro') }}
+                        @endif
+                    </p>
+                </div>
+                <a class="btn-primary" href="{{ route('account.personal-trainer.edit') }}">
+                    {{ $trainerSubmission ? __('site.pt_view_application') : __('site.pt_apply') }}
+                </a>
+            </div>
+        </div>
+
         <div class="mt-8 overflow-hidden rounded-lg border border-[var(--brand-stone)] bg-white">
             <table class="w-full text-left text-sm">
                 <thead class="bg-[var(--brand-cream)]">

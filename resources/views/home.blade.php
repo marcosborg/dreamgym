@@ -63,20 +63,40 @@
         <section class="border-y border-[var(--brand-stone)] bg-white py-14">
             <div class="section">
                 <h2 class="text-3xl font-black">{{ __('site.personal_trainers_title') }}</h2>
-                <div class="mt-8 grid gap-4 md:grid-cols-3">
+                <div class="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                     @foreach ($personalTrainers as $trainer)
-                        <article class="rounded-lg border border-[var(--brand-stone)] p-5">
-                            <h3 class="text-xl font-black">{{ $trainer->name }}</h3>
-                            @if ($trainer->bio)
-                                <p class="mt-3 leading-7 text-neutral-700">{{ $trainer->bio }}</p>
-                            @endif
-                            @if ($trainer->email || $trainer->phone)
-                                <div class="mt-4 space-y-1 text-sm font-semibold text-neutral-700">
-                                    @if ($trainer->email)
-                                        <div><a class="text-[var(--brand-blue)] underline" href="mailto:{{ $trainer->email }}">{{ $trainer->email }}</a></div>
+                        <article class="rounded-xl border border-[var(--brand-stone)] p-6 shadow-sm">
+                            <div class="flex items-center gap-4">
+                                @if ($trainer->photo_url)
+                                    <img src="{{ $trainer->photo_url }}" alt="{{ $trainer->name }}" class="h-20 w-20 shrink-0 rounded-full object-cover ring-4 ring-[var(--brand-cream)]">
+                                @else
+                                    <div class="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-[var(--brand-blue)] text-xl font-black text-white ring-4 ring-[var(--brand-cream)]" aria-label="{{ $trainer->name }}">
+                                        {{ $trainer->initials }}
+                                    </div>
+                                @endif
+                                <div>
+                                    <h3 class="text-xl font-black">{{ $trainer->name }}</h3>
+                                    @if ($trainer->localized('title'))
+                                        <p class="mt-1 font-semibold text-[var(--brand-blue)]">{{ $trainer->localized('title') }}</p>
                                     @endif
-                                    @if ($trainer->phone)
-                                        <div>{{ $trainer->phone }}</div>
+                                </div>
+                            </div>
+                            @if ($trainer->localized('specialties'))
+                                <p class="mt-5 text-sm font-bold uppercase tracking-wide text-neutral-500">{{ $trainer->localized('specialties') }}</p>
+                            @endif
+                            @if ($trainer->localized('bio'))
+                                <p class="mt-3 leading-7 text-neutral-700">{{ $trainer->localized('bio') }}</p>
+                            @endif
+                            @if (($trainer->show_email && $trainer->email) || ($trainer->show_phone && $trainer->phone) || ($trainer->show_whatsapp && $trainer->whatsapp_url))
+                                <div class="mt-5 flex flex-wrap gap-2 text-sm font-bold">
+                                    @if ($trainer->show_email && $trainer->email)
+                                        <a class="btn-secondary" href="mailto:{{ $trainer->email }}">{{ __('site.pt_contact_email') }}</a>
+                                    @endif
+                                    @if ($trainer->show_phone && $trainer->phone)
+                                        <a class="btn-secondary" href="tel:{{ $trainer->phone }}">{{ __('site.pt_contact_phone') }}</a>
+                                    @endif
+                                    @if ($trainer->show_whatsapp && $trainer->whatsapp_url)
+                                        <a class="btn-primary" href="{{ $trainer->whatsapp_url }}" target="_blank" rel="noopener">{{ __('site.pt_contact_whatsapp') }}</a>
                                     @endif
                                 </div>
                             @endif

@@ -6,6 +6,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\IfthenpayCallbackController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\PersonalTrainerSubmissionController;
 use App\Http\Controllers\PurchaseController;
 use App\Models\LegalTermSection;
 use App\Models\PersonalTrainer;
@@ -55,3 +56,8 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [CustomerAuthController::class, 'logout'])->middleware('auth')->name('logout');
 Route::get('/account', [AccountController::class, 'dashboard'])->middleware('auth')->name('account.dashboard');
 Route::post('/account/bookings/{booking}/cancel', [AccountController::class, 'cancelBooking'])->middleware('auth')->name('account.bookings.cancel');
+Route::middleware('auth')->prefix('account/personal-trainer')->name('account.personal-trainer.')->group(function () {
+    Route::get('/', [PersonalTrainerSubmissionController::class, 'edit'])->name('edit');
+    Route::post('/save', [PersonalTrainerSubmissionController::class, 'save'])->name('save');
+    Route::post('/submit', [PersonalTrainerSubmissionController::class, 'submit'])->name('submit');
+});

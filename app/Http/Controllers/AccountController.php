@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
 use App\Models\Booking;
 use App\Services\BookingCancellationService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class AccountController extends Controller
@@ -18,7 +18,9 @@ class AccountController extends Controller
             ->latest('starts_at')
             ->paginate(10);
 
-        return view('account.dashboard', compact('bookings'));
+        $trainerSubmission = $request->user()->personalTrainerSubmissions()->latest()->first();
+
+        return view('account.dashboard', compact('bookings', 'trainerSubmission'));
     }
 
     public function cancelBooking(Booking $booking, BookingCancellationService $cancellations): RedirectResponse
