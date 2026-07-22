@@ -6,6 +6,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\IfthenpayCallbackController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\PersonalTrainerPhotoController;
 use App\Http\Controllers\PersonalTrainerSubmissionController;
 use App\Http\Controllers\PurchaseController;
 use App\Models\LegalTermSection;
@@ -45,6 +46,9 @@ Route::post('/checkout/{booking}/complete', [CheckoutController::class, 'complet
 Route::get('/booking/{booking}/confirmed', [CheckoutController::class, 'confirmed'])->name('booking.confirmed');
 Route::get('/ifthenpay/callback', IfthenpayCallbackController::class)->name('ifthenpay.callback');
 Route::get('/lang/{locale}', LocaleController::class)->name('locale.switch');
+Route::get('/media/{path}', PersonalTrainerPhotoController::class)
+    ->where('path', 'personal-trainers/.*')
+    ->name('personal-trainer.photo');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [CustomerAuthController::class, 'showLogin'])->name('login');

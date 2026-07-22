@@ -68,6 +68,24 @@ class PersonalTrainerSubmissionTest extends TestCase
         Mail::assertSent(PersonalTrainerSubmittedMail::class, fn ($mail) => $mail->hasTo($admin->email));
     }
 
+    public function test_uploaded_photo_is_served_without_the_public_storage_link(): void
+    {
+        Storage::fake('public');
+        $photo = UploadedFile::fake()->image('ana.jpg', 400, 400);
+        $path = $photo->store('personal-trainers/submissions', 'public');
+        $submission = PersonalTrainerSubmission::create([
+            'user_id' => User::factory()->create()->id,
+            'status' => PersonalTrainerSubmission::STATUS_DRAFT,
+            ...$this->validPayload(),
+            'photo_path' => $path,
+        ]);
+
+        $this->assertStringStartsWith('/media/personal-trainers/', $submission->photo_url);
+        $this->get($submission->photo_url)
+            ->assertOk()
+            ->assertHeader('Content-Type', 'image/jpeg');
+    }
+
     public function test_pending_profile_is_not_public_until_approved(): void
     {
         Mail::fake();

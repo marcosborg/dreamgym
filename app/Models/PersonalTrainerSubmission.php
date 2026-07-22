@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\Storage;
 
 class PersonalTrainerSubmission extends Model
 {
@@ -59,7 +58,9 @@ class PersonalTrainerSubmission extends Model
 
     public function getPhotoUrlAttribute(): ?string
     {
-        return $this->photo_path ? Storage::disk('public')->url($this->photo_path) : null;
+        return $this->photo_path
+            ? route('personal-trainer.photo', ['path' => $this->photo_path], false)
+            : null;
     }
 
     public static function statusOptions(): array
