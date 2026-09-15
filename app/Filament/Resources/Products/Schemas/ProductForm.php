@@ -39,7 +39,7 @@ class ProductForm
                     ->default('EUR'),
                 TextInput::make('credits')
                     ->label('Créditos')
-                    ->helperText('Usado em packs de sessões.')
+                    ->helperText('Usado em packs e mensalidades. Cada reserva individual desconta um crédito.')
                     ->numeric(),
                 TextInput::make('days')
                     ->label('Dias de validade')

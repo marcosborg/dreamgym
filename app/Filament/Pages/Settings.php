@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\Setting;
+use App\Services\ProductCatalog;
 use App\Services\SiteSettings;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -39,7 +40,8 @@ class Settings extends Page
         $this->form->fill([
             'maintenance_enabled' => app(SiteSettings::class)->maintenanceEnabled(),
             'maintenance_allowed_ips' => implode("\n", app(SiteSettings::class)->maintenanceAllowedIps()),
-            'faq_items' => app(\App\Services\ProductCatalog::class)->faq(),
+            'faq_items' => app(ProductCatalog::class)->faq(),
+            'equipment_groups' => app(SiteSettings::class)->equipmentGroups(),
         ]);
     }
 
@@ -61,7 +63,7 @@ class Settings extends Page
                             ->helperText('Quando ativo, visitantes fora da lista de IPs permitidos veem a página de manutenção.'),
                         Textarea::make('maintenance_allowed_ips')
                             ->label('IPs com acesso ao frontend')
-                            ->helperText('Um IP por linha, ou separados por vírgulas. O teu IP atual: ' . (request()->ip() ?? 'indisponível'))
+                            ->helperText('Um IP por linha, ou separados por vírgulas. O teu IP atual: '.(request()->ip() ?? 'indisponível'))
                             ->rows(5)
                             ->columnSpanFull(),
                     ]),
@@ -78,6 +80,26 @@ class Settings extends Page
                             ->addActionLabel('Adicionar pergunta')
                             ->columnSpanFull(),
                     ]),
+                Section::make('Equipamento')
+                    ->description('Grupos e equipamentos apresentados na homepage.')
+                    ->schema([
+                        Repeater::make('equipment_groups')
+                            ->label('Áreas do espaço')
+                            ->schema([
+                                TextInput::make('title_pt')->label('Título PT')->required(),
+                                TextInput::make('title_en')->label('Título EN')->required(),
+                                Repeater::make('items')
+                                    ->label('Equipamentos')
+                                    ->schema([
+                                        TextInput::make('name_pt')->label('Nome PT')->required(),
+                                        TextInput::make('name_en')->label('Nome EN')->required(),
+                                    ])
+                                    ->columns(2)
+                                    ->columnSpanFull(),
+                            ])
+                            ->columns(2)
+                            ->columnSpanFull(),
+                    ]),
             ]);
     }
 
@@ -88,6 +110,7 @@ class Settings extends Page
         Setting::setValue(SiteSettings::MAINTENANCE_ENABLED, (bool) ($data['maintenance_enabled'] ?? false));
         Setting::setValue(SiteSettings::MAINTENANCE_ALLOWED_IPS, $this->parseIps((string) ($data['maintenance_allowed_ips'] ?? '')));
         Setting::setValue('faq_items', array_values($data['faq_items'] ?? []));
+        Setting::setValue(SiteSettings::EQUIPMENT_GROUPS, array_values($data['equipment_groups'] ?? []));
 
         Notification::make()
             ->title('Definições guardadas')

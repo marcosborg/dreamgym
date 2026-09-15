@@ -19,6 +19,12 @@ php artisan optimize
 
 Personal Trainer photographs are stored on the `public` filesystem disk, under `personal-trainers/`.
 
+### Read production photos in a local/sandbox environment
+
+Set `MEDIA_REMOTE_BASE_URL=https://dreamgym.pt/media` in the local `.env`, then run `php artisan config:clear`. With `APP_ENV=local` or `APP_ENV=sandbox`, the controlled `/media/personal-trainers/...` route serves an existing local file first, otherwise redirects the browser to the configured public HTTPS media base. Production ignores this setting. An unset/invalid base or an unavailable remote file does not fall back to another host; missing local files return 404 when remote reading is disabled.
+
+This changes reads only. Uploads and edits still use the local `public` disk; no production credentials, uploads, writes or server-side downloads are used. Normal image display uses browser image requests rather than JavaScript/CORS fetches. The remote host must permit these public image requests; its hotlink/access restrictions are not bypassed. Redirects are not cached so a new local upload takes precedence immediately.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

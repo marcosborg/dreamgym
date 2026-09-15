@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Room;
+use App\Models\User;
 use App\Services\AvailabilityService;
 use App\Services\ProductCatalog;
 use App\Services\SandboxPaymentService;
@@ -14,7 +15,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
-use App\Models\User;
 
 class BookingController extends Controller
 {
@@ -104,6 +104,7 @@ class BookingController extends Controller
                 'terms_accepted' => ['accepted'],
             ]);
 
+            $user->decrement('membership_credits');
             $paidWith = Booking::PAID_WITH_MEMBERSHIP;
             $status = Booking::STATUS_CONFIRMED;
             $paymentStatus = 'paid';

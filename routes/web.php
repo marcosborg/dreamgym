@@ -14,14 +14,16 @@ use App\Models\PersonalTrainer;
 use App\Models\Room;
 use App\Services\LegalTerms;
 use App\Services\ProductCatalog;
+use App\Services\SiteSettings;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function (ProductCatalog $catalog) {
+Route::get('/', function (ProductCatalog $catalog, SiteSettings $settings) {
     $room = Room::query()->where('is_active', true)->first();
     $singleHour = $room ? $catalog->singleHour($room) : null;
     $personalTrainers = PersonalTrainer::query()->active()->ordered()->get();
+    $equipmentGroups = $settings->equipmentGroups();
 
-    return view('home', compact('room', 'singleHour', 'personalTrainers'));
+    return view('home', compact('room', 'singleHour', 'personalTrainers', 'equipmentGroups'));
 })->name('home');
 
 Route::get('/terms', function (LegalTerms $terms) {

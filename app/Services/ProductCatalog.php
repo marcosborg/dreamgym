@@ -22,6 +22,8 @@ class ProductCatalog
 
     public const MEMBERSHIP_DAYS = 30;
 
+    public const MEMBERSHIP_CREDITS = 30;
+
     public function singleHour(Room $room): array
     {
         return $this->firstOfType(self::SINGLE_HOUR, $room, [
@@ -50,6 +52,7 @@ class ProductCatalog
             'price_cents' => $room->slot_price_cents * 12,
             'currency' => $room->currency,
             'days' => self::MEMBERSHIP_DAYS,
+            'credits' => self::MEMBERSHIP_CREDITS,
         ]);
     }
 
@@ -116,11 +119,11 @@ class ProductCatalog
 
     public function formattedPrice(int $priceCents, string $currency = 'EUR'): string
     {
-        return number_format($priceCents / 100, 2, ',', ' ') . ' ' . $currency;
+        return number_format($priceCents / 100, 2, ',', ' ').' '.$currency;
     }
 
     /**
-     * @param array<string, mixed> $fallback
+     * @param  array<string, mixed>  $fallback
      * @return array<string, mixed>
      */
     private function firstOfType(string $type, Room $room, array $fallback): array

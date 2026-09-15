@@ -530,6 +530,7 @@ class BookingFlowTest extends TestCase
             'name' => 'Member',
             'email' => 'member@example.test',
             'password' => 'password',
+            'membership_credits' => 30,
             'membership_expires_at' => now()->addDays(30),
         ]);
 
@@ -547,6 +548,30 @@ class BookingFlowTest extends TestCase
         $this->assertSame('paid', $booking->payment_status);
         $this->assertSame(Booking::PAID_WITH_MEMBERSHIP, $booking->paid_with);
         $this->assertSame(0, $booking->price_cents);
+        $this->assertSame(29, $user->fresh()->membership_credits);
+    }
+
+    public function test_membership_purchase_adds_limited_credits(): void
+    {
+        $this->roomWithHours();
+        $product = Product::query()->where('type', Product::TYPE_MEMBERSHIP)->firstOrFail();
+        $product->update(['is_active' => true, 'credits' => 30, 'days' => 30]);
+
+        $this->post(route('purchase.store'), [
+            'product_id' => $product->id,
+            'customer_name' => 'Plan Customer',
+            'customer_email' => 'plan@example.test',
+            'password' => 'secret123',
+            'password_confirmation' => 'secret123',
+        ])->assertRedirect();
+
+        $payment = Payment::firstOrFail();
+        $this->post(route('purchase.complete', $payment), ['terms_accepted' => '1'])
+            ->assertRedirect(route('purchase.confirmed', $payment));
+
+        $user = User::firstWhere('email', 'plan@example.test');
+        $this->assertSame(30, $user->membership_credits);
+        $this->assertTrue($user->membership_expires_at->isFuture());
     }
 
     public function test_customer_cancellation_before_cutoff_returns_credit(): void
@@ -578,6 +603,40 @@ class BookingFlowTest extends TestCase
 
         $this->assertSame(Booking::STATUS_CANCELLED, $booking->fresh()->status);
         $this->assertSame(1, $user->fresh()->session_credits);
+    }
+
+    public function test_customer_cancellation_before_cutoff_returns_membership_credit(): void
+    {
+        $room = $this->roomWithHours();
+        $user = User::create([
+            'name' => 'Member',
+            'email' => 'member-cancel@example.test',
+            'password' => 'password',
+            'membership_credits' => 29,
+            'membership_expires_at' => now()->addDays(30),
+        ]);
+        $booking = Booking::create([
+            'room_id' => $room->id,
+            'user_id' => $user->id,
+            'customer_name' => 'Member',
+            'customer_email' => 'member-cancel@example.test',
+            'locale' => 'pt',
+            'starts_at' => '2026-06-08 10:00:00',
+            'ends_at' => '2026-06-08 11:00:00',
+            'status' => Booking::STATUS_CONFIRMED,
+            'payment_status' => 'paid',
+            'paid_with' => Booking::PAID_WITH_MEMBERSHIP,
+            'price_cents' => 0,
+            'currency' => 'EUR',
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('account.bookings.cancel', $booking))
+            ->assertRedirect(route('account.dashboard'));
+
+        $user->refresh();
+        $this->assertSame(30, $user->membership_credits);
+        $this->assertSame(0, $user->session_credits);
     }
 
     public function test_customer_cancellation_inside_cutoff_does_not_return_credit(): void
@@ -686,7 +745,7 @@ class BookingFlowTest extends TestCase
     public function test_language_switch_sets_session_locale(): void
     {
         $this->get(route('locale.switch', 'en'))->assertRedirect();
-        $this->withSession(['locale' => 'en'])->get(route('home'))->assertSee('Your private gym room');
+        $this->withSession(['locale' => 'en'])->get(route('home'))->assertSee('Your private training room');
     }
 
     private function roomWithHours(int $capacity = 1): Room

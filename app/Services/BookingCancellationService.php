@@ -22,7 +22,11 @@ class BookingCancellationService
             }
 
             if ($this->shouldReturnCredit($booking)) {
-                $booking->user?->increment('session_credits');
+                $creditField = $booking->paid_with === Booking::PAID_WITH_MEMBERSHIP
+                    ? 'membership_credits'
+                    : 'session_credits';
+
+                $booking->user?->increment($creditField);
             }
 
             $booking->update([
@@ -39,7 +43,7 @@ class BookingCancellationService
         return $booking->user_id !== null
             && $booking->booking_type === Booking::TYPE_SINGLE_HOUR
             && $booking->payment_status === 'paid'
-            && in_array($booking->paid_with, [Booking::PAID_WITH_CREDITS, Booking::PAID_WITH_PAYMENT], true)
+            && in_array($booking->paid_with, [Booking::PAID_WITH_CREDITS, Booking::PAID_WITH_MEMBERSHIP, Booking::PAID_WITH_PAYMENT], true)
             && $booking->starts_at->greaterThanOrEqualTo(now()->addHours(self::CREDIT_REFUND_CUTOFF_HOURS));
     }
 }

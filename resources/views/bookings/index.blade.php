@@ -6,7 +6,8 @@
     @endphp
 
     <section class="section py-10">
-        <h1 class="text-4xl font-black">{{ __('site.booking_title') }}</h1>
+        <p class="eyebrow">{{ app()->getLocale() === 'pt' ? 'Reservas' : 'Bookings' }}</p>
+        <h1 class="mt-3 text-4xl font-black md:text-6xl">{{ app()->getLocale() === 'pt' ? 'Agenda de ' : 'Booking ' }}<span class="red-word">{{ app()->getLocale() === 'pt' ? 'reservas' : 'calendar' }}</span></h1>
         <div class="mt-6 grid gap-3 md:grid-cols-4">
             <a href="#booking-form" data-booking-card data-booking-type="single_hour" data-select-booking-type="single_hour" class="option-card is-selected">
                 <span class="option-marker" aria-hidden="true"></span>
@@ -55,9 +56,12 @@
                                 <input form="booking-form" type="radio" name="starts_at" value="{{ $slot['starts_at']->toDateTimeString() }}" class="peer sr-only" @disabled(! $slot['available']) required>
                                 <span class="block rounded-lg border p-4 text-center font-bold peer-checked:border-[var(--brand-ink)] peer-checked:bg-[var(--brand-ink)] peer-checked:text-white {{ $slot['available'] ? 'cursor-pointer border-[var(--brand-stone)] bg-white' : 'border-neutral-200 bg-neutral-100 text-neutral-400' }}">
                                     {{ $slot['starts_at']->format('H:i') }}
-                                    @if (! $slot['available'])
-                                        <small class="block font-normal">{{ __('site.unavailable') }}</small>
-                                    @endif
+                                    <span class="mt-2 flex justify-center gap-1" aria-hidden="true">
+                                        @for ($seat = 1; $seat <= $room->capacity; $seat++)
+                                            <i class="h-2 w-3 rounded-sm {{ $seat <= ($room->capacity - $slot['remaining_capacity']) ? 'bg-[var(--brand-blue)]' : 'bg-neutral-600' }}"></i>
+                                        @endfor
+                                    </span>
+                                    <small class="mt-1 block font-normal">{{ $slot['available'] ? __('site.places_available', ['available' => $slot['remaining_capacity'], 'capacity' => $room->capacity]) : __('site.unavailable') }}</small>
                                 </span>
                             </label>
                         @endforeach

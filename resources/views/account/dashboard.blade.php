@@ -2,23 +2,26 @@
 
 @section('content')
     <section class="section py-12">
-        <h1 class="text-4xl font-black">{{ __('site.my_account') }}</h1>
+        <p class="eyebrow">{{ __('site.my_account') }}</p>
+        <h1 class="mt-3 text-4xl font-black md:text-6xl">{{ app()->getLocale() === 'pt' ? 'Olá' : 'Hello' }}, <span class="red-word">{{ auth()->user()->name }}</span></h1>
         <p class="mt-2 text-neutral-700">{{ __('site.booking_history') }}</p>
         <p class="mt-2 text-sm text-neutral-600">{{ __('site.cancellation_policy_short') }}</p>
         @if (session('status'))
             <div class="mt-4 rounded border border-green-200 bg-green-50 p-4 text-sm text-green-800">{{ session('status') }}</div>
         @endif
 
-        <div class="mt-8 grid gap-4 sm:grid-cols-2">
-            <div class="rounded-lg border border-[var(--brand-stone)] bg-white p-5">
+        <div class="mt-8 grid gap-4 md:grid-cols-3">
+            <div class="dark-panel border-[var(--brand-blue)] p-6">
                 <div class="text-sm text-neutral-500">{{ __('site.session_credits') }}</div>
                 <div class="mt-2 text-3xl font-black">{{ auth()->user()->session_credits }}</div>
             </div>
-            <div class="rounded-lg border border-[var(--brand-stone)] bg-white p-5">
-                <div class="text-sm text-neutral-500">{{ __('site.membership') }}</div>
-                <div class="mt-2 text-lg font-bold">
-                    {{ auth()->user()->membership_expires_at?->isFuture() ? auth()->user()->membership_expires_at->format('d/m/Y') : __('site.inactive') }}
-                </div>
+            <div class="dark-panel p-6">
+                <div class="text-sm text-neutral-500">{{ __('site.membership_credits') }}</div>
+                <div class="mt-2 text-3xl font-black">{{ auth()->user()->hasActiveMembership() ? auth()->user()->membership_credits : 0 }}</div>
+            </div>
+            <div class="dark-panel p-6">
+                <div class="text-sm text-neutral-500">{{ __('site.membership_valid_until') }}</div>
+                <div class="mt-2 text-xl font-black">{{ auth()->user()->hasActiveMembership() ? auth()->user()->membership_expires_at->format('d/m/Y') : __('site.inactive') }}</div>
             </div>
         </div>
 

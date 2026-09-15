@@ -100,6 +100,7 @@ class SandboxPaymentService
                     : now();
 
                 $user->update([
+                    'membership_credits' => $user->membership_credits + (int) ($payment->metadata['credits'] ?? ProductCatalog::MEMBERSHIP_CREDITS),
                     'membership_expires_at' => $startsAt->copy()->addDays(
                         (int) ($payment->metadata['days'] ?? ProductCatalog::MEMBERSHIP_DAYS),
                     ),

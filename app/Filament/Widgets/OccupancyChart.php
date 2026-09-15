@@ -20,7 +20,7 @@ class OccupancyChart extends ChartWidget
 
     protected function getData(): array
     {
-        $hours = collect(range(7, 22));
+        $hours = collect(range(6, 22));
 
         return [
             'datasets' => [
@@ -28,7 +28,8 @@ class OccupancyChart extends ChartWidget
                     'label' => 'Bookings',
                     'data' => $hours->map(fn (int $hour): int => Booking::query()
                         ->where('status', Booking::STATUS_CONFIRMED)
-                        ->whereBetween('starts_at', [now(), now()->addDays(30)])
+                        ->where('ends_at', '>', now())
+                        ->where('starts_at', '<=', now()->addDays(30))
                         ->whereTime('starts_at', '>=', sprintf('%02d:00:00', $hour))
                         ->whereTime('starts_at', '<', sprintf('%02d:00:00', $hour + 1))
                         ->count())->all(),

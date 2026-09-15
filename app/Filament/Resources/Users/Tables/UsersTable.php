@@ -17,6 +17,8 @@ class UsersTable
                 TextColumn::make('name')->searchable()->sortable(),
                 TextColumn::make('email')->searchable()->sortable(),
                 TextColumn::make('phone')->searchable(),
+                TextColumn::make('session_credits')->label('Créditos packs')->sortable(),
+                TextColumn::make('membership_credits')->label('Créditos plano')->sortable(),
                 IconColumn::make('is_admin')->label('Admin')->boolean(),
                 TextColumn::make('bookings_count')
                     ->counts('bookings')

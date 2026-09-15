@@ -33,6 +33,14 @@ class UserForm
                     ->label('Admin')
                     ->helperText('Allows this user to access the admin panel.')
                     ->default(false),
+                TextInput::make('session_credits')
+                    ->label('Créditos de packs')
+                    ->numeric()
+                    ->default(0),
+                TextInput::make('membership_credits')
+                    ->label('Créditos da mensalidade')
+                    ->numeric()
+                    ->default(0),
             ]);
     }
 }

@@ -29,6 +29,7 @@ class User extends Authenticatable implements FilamentUser
         'password',
         'is_admin',
         'session_credits',
+        'membership_credits',
         'membership_expires_at',
     ];
 
@@ -54,6 +55,7 @@ class User extends Authenticatable implements FilamentUser
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'session_credits' => 'integer',
+            'membership_credits' => 'integer',
             'membership_expires_at' => 'datetime',
         ];
     }
@@ -80,6 +82,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function hasActiveMembership(): bool
     {
-        return $this->membership_expires_at?->isFuture() ?? false;
+        return ($this->membership_expires_at?->isFuture() ?? false)
+            && $this->membership_credits > 0;
     }
 }
