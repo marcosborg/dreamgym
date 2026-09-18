@@ -93,6 +93,7 @@ return [
     'room' => 'Room',
     'date' => 'Date',
     'time' => 'Time',
+    'access_preparing' => 'We are preparing your access code. It will be emailed as soon as it is ready. If your booking is soon, please contact the gym.',
     'access_code' => 'Access code',
     'validity' => 'Validity',
     'email_subject' => 'Dream Gym booking confirmed',

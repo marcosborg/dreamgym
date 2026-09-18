@@ -35,7 +35,7 @@ class AccessCodesTable
                     ->label('Marcar como configurado')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->visible(fn (AccessCode $record): bool => $record->provision_status !== AccessCode::PROVISIONED)
+                    ->visible(fn (AccessCode $record): bool => config('lock.provider') !== 'ttlock' && ! $record->ttlock_lock_id && $record->provision_status !== AccessCode::PROVISIONED)
                     ->action(function (AccessCode $record): void {
                         app(LockProvisioningService::class)->markManuallyConfigured($record);
 

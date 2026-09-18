@@ -65,7 +65,7 @@
                         <td class="p-4">{{ $booking->room->localized_name }}</td>
                         <td class="p-4">{{ $booking->status }}</td>
                         <td class="p-4">{{ $booking->booking_type }}</td>
-                        <td class="p-4 font-bold">{{ $booking->accessCode?->code ?? '-' }}</td>
+                        <td class="p-4 font-bold">{{ $booking->accessCode?->ready_for_use ? $booking->accessCode->code : ($booking->status === 'confirmed' ? __('site.access_preparing') : '-') }}</td>
                         <td class="p-4">{{ $booking->formatted_price }}</td>
                         <td class="p-4 text-right">
                             @if ($booking->canBeCancelledByCustomer())

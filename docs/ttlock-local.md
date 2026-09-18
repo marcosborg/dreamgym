@@ -1,10 +1,10 @@
-# TTLock no Dream Gym — diagnóstico local
+# TTLock no Dream Gym — integração e diagnóstico
 
 ## Estado
 
-Existe um fluxo de PINs de reserva com providers `simulated`, `manual_ihr` e um `ihr_api` por implementar. Esta preparação acrescenta apenas autenticação e descoberta TTLock. Não muda o provider, as reservas, os intervalos de acesso ou a produção. Não abre portas nem cria/revoga PINs ou eKeys.
+Existe um fluxo de PINs de reserva com providers `simulated`, `manual_ihr` e um `ihr_api` por implementar. O comando `ttlock:discover` mantém-se como diagnóstico sem escrita. O provider `ttlock` permite agora provisionar e revogar PINs temporários de reservas, conforme a secção de produção abaixo.
 
-Hardware indicado pelo utilizador: cilindro HR Smart L153, nome na app `Dream Gym 1`, gateway G5 `Netlook`. A abertura remota pela app foi confirmada pelo utilizador. A identificação pela API e a compatibilidade com PINs/eKeys ainda não foram verificadas. Uma abertura remota bem-sucedida não comprova suporte a PINs temporários.
+Hardware indicado pelo utilizador: cilindro HR Smart L153, nome na app `Dream Gym 1`, gateway G5 `Netlook`. A abertura remota pela app foi confirmada pelo utilizador. Em 18/09/2026 a API confirmou a Dream Gym 1 (lockId 34816850), PINs V4 e o gateway 1745068 online. Um PIN personalizado com dígitos 1–6 e validade futura de dois minutos foi criado, consultado e removido com sucesso. Uma abertura remota bem-sucedida não comprova suporte a PINs temporários.
 
 ## Configuração privada e primeiro teste
 
@@ -30,13 +30,9 @@ Hardware indicado pelo utilizador: cilindro HR Smart L153, nome na app `Dream Gy
 
 Tokens não são persistidos nem apresentados. Cada execução autentica novamente. Erros apresentados são sanitizados; dados sensíveis da fechadura não integram o resultado. Não ativar ferramentas de captura de pedidos HTTP durante autenticação.
 
-## Próxima fase
-
-Depois de identificar a fechadura, confirmar capacidades reais do L153 e o método de acesso desejado. Definir associação explícita entre salas e um ou mais `lockId`, antes de ligar o provisionamento às reservas. Será necessário implementar armazenamento cifrado/renovação de tokens, tratamento de falhas, idempotência, revogação e testes de validade/cancelamento. Nenhuma associação ou operação física foi criada nesta fase.
-
 ## Verificação
 
-Testes com respostas HTTP simuladas cobrem autenticação, paginação, filtragem de dados, configuração ausente, recusa de endpoints externos e erros TTLock. Não houve autenticação real porque faltam as credenciais. Não se alteraram dados da base de dados.
+Testes com respostas HTTP simuladas cobrem autenticação, paginação, filtragem de dados, configuração ausente, recusa de endpoints externos e erros TTLock. O diagnóstico inicial não usou credenciais reais. A validação de produção de 18/09/2026 está descrita acima.
 
 ## Fontes oficiais
 
@@ -44,3 +40,23 @@ Testes com respostas HTTP simuladas cobrem autenticação, paginação, filtrage
 - Autenticação e formato da palavra-passe: https://euopen.ttlock.com/doc/oauth2
 - Lista de fechaduras e campos: https://euopen.ttlock.com/doc/api/v3/lock/list
 - Formato das chamadas: https://euopen.ttlock.com/doc/api
+
+
+## Integração de reservas em produção
+
+O provider `ttlock` associa cada sala explicitamente através de `rooms.ttlock_lock_id`.
+A conta autenticada é guardada no registo 1 de `ttlock_connections`, com credenciais e tokens cifrados pelo `APP_KEY` do servidor. Nunca alterar essa chave sem migrar os dados cifrados. A palavra-passe da conta não é guardada. O token é renovado automaticamente antes de expirar.
+
+`LOCK_PROVIDER=ttlock` ativa o provisionamento após o commit da reserva paga. É usada a API de PIN personalizado V4 pelo gateway (`addType=2`), com os limites exatos de início/fim, incluindo os buffers configurados. O nome determinístico por reserva e a consulta prévia permitem recuperar respostas incertas sem duplicar PINs. O código só é apresentado como pronto depois da confirmação da TTLock.
+
+Executar a cada minuto pelo cPanel:
+
+```sh
+cd /home4/dreamgym/public_html && /usr/local/bin/php artisan ttlock:sync >> storage/logs/ttlock-sync.log 2>&1
+```
+
+O comando renova tokens, tenta novamente PINs pendentes, envia o email quando o acesso fica pronto e repete revogações pendentes de reservas canceladas. A revogação imediata é tentada após o commit do cancelamento. Se o gateway estiver offline, a revogação continua pendente até recuperar; a validade original continua a aplicar-se na fechadura. Consultar `provision_status=revoke_pending` no backoffice. PINs manuais ou antigos sem associação TTLock não são importados nem removidos automaticamente.
+
+Não são enviados comandos de abertura remota. Não se alteram PINs permanentes existentes. Reservas com acesso TTLock não podem ser reativadas, mudar de sala/horário nem ser apagadas enquanto o PIN não estiver revogado ou expirado. Para alterar, cancelar e criar uma nova reserva.
+
+Antes da ativação: validar `lockId`, versão V4, gateway online, criação/consulta/revogação de um PIN de teste futuro e curto, e ausência de PINs antigos ativos a migrar. Validar também uma abertura física com o cliente. Para suspender novos provisionamentos, usar `LOCK_PROVIDER=manual_ihr`; isso não revoga PINs já criados na fechadura.

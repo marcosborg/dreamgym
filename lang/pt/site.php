@@ -93,6 +93,7 @@ return [
     'room' => 'Sala',
     'date' => 'Data',
     'time' => 'Hora',
+    'access_preparing' => 'Estamos a preparar o seu código de acesso. Será enviado por email assim que estiver pronto. Se a reserva estiver próxima, contacte o ginásio.',
     'access_code' => 'Código de acesso',
     'validity' => 'Validade',
     'email_subject' => 'Reserva Dream Gym confirmada',

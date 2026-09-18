@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Room extends Model
 {
     protected $fillable = [
+        'ttlock_lock_id',
         'name',
         'description',
         'name_pt',

@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\Payment;
 use App\Services\Locks\LockProvisioningService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -47,9 +48,16 @@ class SandboxPaymentService
             ]);
 
             $accessCode = app(AccessCodeService::class)->createForBooking($booking);
-            app(LockProvisioningService::class)->provision($accessCode);
-
-            Mail::to($booking->customer_email)->send(new BookingConfirmed($booking->fresh(['room', 'accessCode'])));
+            if (config('lock.provider') === 'ttlock') {
+                // Physical access and rotated tokens must survive independently of the booking transaction.
+                DB::afterCommit(fn () => $this->activateTtlockAccess($booking->id));
+            } else {
+                app(LockProvisioningService::class)->provision($accessCode);
+                Mail::to($booking->customer_email)->send(new BookingConfirmed($booking->fresh(['room', 'accessCode'])));
+                if ($accessCode->fresh()->ready_for_use) {
+                    $accessCode->update(['access_notified_at' => now()]);
+                }
+            }
 
             return $booking->fresh(['payment', 'accessCode', 'room']);
         });
@@ -65,12 +73,37 @@ class SandboxPaymentService
             ]);
 
             $accessCode = app(AccessCodeService::class)->createForBooking($booking);
-            app(LockProvisioningService::class)->provision($accessCode);
-
-            Mail::to($booking->customer_email)->send(new BookingConfirmed($booking->fresh(['room', 'accessCode'])));
+            if (config('lock.provider') === 'ttlock') {
+                // Physical access and rotated tokens must survive independently of the booking transaction.
+                DB::afterCommit(fn () => $this->activateTtlockAccess($booking->id));
+            } else {
+                app(LockProvisioningService::class)->provision($accessCode);
+                Mail::to($booking->customer_email)->send(new BookingConfirmed($booking->fresh(['room', 'accessCode'])));
+                if ($accessCode->fresh()->ready_for_use) {
+                    $accessCode->update(['access_notified_at' => now()]);
+                }
+            }
 
             return $booking->fresh(['payment', 'accessCode', 'room']);
         });
+    }
+
+    private function activateTtlockAccess(int $bookingId): void
+    {
+        $booking = Booking::with(['accessCode', 'room'])->findOrFail($bookingId);
+        if ($booking->status !== Booking::STATUS_CONFIRMED || $booking->payment_status !== 'paid') {
+            return;
+        }
+        $code = app(LockProvisioningService::class)->provision($booking->accessCode);
+        try {
+            Mail::to($booking->customer_email)->send(new BookingConfirmed($booking->fresh(['room', 'accessCode'])));
+            if ($code->ready_for_use) {
+                $code->update(['access_notified_at' => now()]);
+            }
+        } catch (\Throwable) {
+            // ttlock:sync retries delivery; never roll back a paid booking or an active lock PIN.
+            Log::warning('Email de acesso TTLock pendente.', ['booking_id' => $bookingId]);
+        }
     }
 
     public function completePurchase(Payment $payment): Payment

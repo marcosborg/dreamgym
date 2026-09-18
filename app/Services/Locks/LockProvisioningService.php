@@ -33,8 +33,26 @@ class LockProvisioningService
         }
     }
 
+    public function revoke(AccessCode $accessCode): void
+    {
+        if (! $accessCode->ttlock_lock_id) {
+            return;
+        }
+        try {
+            app(TtlockLockProvider::class)->revoke($accessCode);
+        } catch (Throwable $exception) {
+            $accessCode->update([
+                'provision_status' => 'revoke_pending',
+                'lock_response_log' => ['driver' => 'ttlock', 'error' => $exception->getMessage(), 'action' => 'revoke'],
+            ]);
+        }
+    }
+
     public function markManuallyConfigured(AccessCode $accessCode): AccessCode
     {
+        if (config('lock.provider') === 'ttlock' || $accessCode->ttlock_lock_id) {
+            throw new \RuntimeException('Um PIN TTLock requer confirmação da API.');
+        }
         $log = $accessCode->lock_response_log ?? [];
         $log['manual_configured_at'] = now()->toIso8601String();
         $log['manual_configured_note'] = 'PIN marcado pelo admin como configurado na iHR Smart/L153.';
