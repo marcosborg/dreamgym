@@ -1,6 +1,9 @@
 @extends('layouts.public')
 
 @section('content')
+    @if ($payment->status === 'pending' && ! empty($payment->metadata['ifthenpay']['transactionId']))
+        <script>setTimeout(() => window.location.reload(), 10000);</script>
+    @endif
     <section class="section max-w-3xl py-12">
         <div class="rounded-lg border border-[var(--brand-stone)] bg-white p-8">
             <h1 class="text-3xl font-black">{{ __('site.checkout_title') }}</h1>
@@ -30,16 +33,17 @@
                     <p class="mt-2 text-sm text-neutral-700">{{ __('site.payment_waiting_callback') }}</p>
                 </div>
             @endif
+            @if (empty($payment->metadata['ifthenpay']['transactionId']) || (($payment->metadata['payment_method'] ?? '') === 'mbway' && ! empty($payment->metadata['ifthenpay']['expireDate']) && \Carbon\Carbon::parse($payment->metadata['ifthenpay']['expireDate'])->isPast()))
             <form method="POST" action="{{ route('checkout.complete', $booking) }}" class="mt-8">
                 @csrf
                 @if ($paymentProvider === 'ifthenpay')
                     <div class="mb-5 grid gap-3 sm:grid-cols-2">
                         <label class="rounded border border-[var(--brand-stone)] p-4 font-bold">
-                            <input type="radio" name="payment_method" value="multibanco" @checked(old('payment_method', 'multibanco') === 'multibanco')>
+                            <input type="radio" name="payment_method" value="multibanco" @checked(old('payment_method', 'mbway') === 'multibanco')>
                             <span class="ml-2">Multibanco</span>
                         </label>
                         <label class="rounded border border-[var(--brand-stone)] p-4 font-bold">
-                            <input type="radio" name="payment_method" value="mbway" @checked(old('payment_method') === 'mbway')>
+                            <input type="radio" name="payment_method" value="mbway" @checked(old('payment_method', 'mbway') === 'mbway')>
                             <span class="ml-2">MB WAY</span>
                         </label>
                     </div>
@@ -56,6 +60,7 @@
                 </label>
                 <button class="btn-primary w-full" type="submit">{{ __('site.pay_now') }}</button>
             </form>
+            @endif
         </div>
     </section>
 @endsection

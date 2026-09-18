@@ -12,12 +12,16 @@ use Illuminate\View\View;
 
 class CheckoutController extends Controller
 {
-    public function show(Booking $booking, SandboxPaymentService $payments, IfthenpayPaymentService $ifthenpay, PaymentProvider $provider): View
+    public function show(Booking $booking, SandboxPaymentService $payments, IfthenpayPaymentService $ifthenpay, PaymentProvider $provider): View|RedirectResponse
     {
         $booking->load(['room', 'payment']);
         $payment = $booking->payment ?: ($provider->isIfthenpay()
             ? $ifthenpay->createPayment($booking)
             : $payments->createPayment($booking));
+
+        if ($booking->payment_status === 'paid') {
+            return redirect()->route('booking.confirmed', $booking);
+        }
 
         return view('checkout.show', [
             'booking' => $booking,

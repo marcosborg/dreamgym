@@ -7,6 +7,7 @@ use App\Models\Payment;
 use App\Models\Room;
 use App\Models\User;
 use App\Services\SandboxPaymentService;
+use Carbon\Carbon;
 use Ifthenpay\PaymentGateway\Enums\Status;
 use Ifthenpay\PaymentGateway\Model\Mbway;
 use Ifthenpay\PaymentGateway\Model\MultibancoDynamic;
@@ -67,6 +68,25 @@ class IfthenpayPaymentService
 
     public function initialize(Payment $payment, string $method, ?string $mobileNumber = null): Payment
     {
+        return DB::transaction(function () use ($payment, $method, $mobileNumber) {
+            $payment = Payment::query()->lockForUpdate()->findOrFail($payment->id);
+            if ($payment->status === 'paid') {
+                return $payment;
+            }
+            $existing = $payment->metadata['ifthenpay'] ?? [];
+            if (! empty($existing['transactionId'])) {
+                $expires = $existing['expireDate'] ?? null;
+                if (($payment->metadata['payment_method'] ?? '') !== 'mbway' || ! $expires || Carbon::parse($expires)->isFuture()) {
+                    return $payment;
+                }
+            }
+
+            return $this->initializeRequest($payment, $method, $mobileNumber);
+        });
+    }
+
+    private function initializeRequest(Payment $payment, string $method, ?string $mobileNumber): Payment
+    {
         $gateway = $this->gatewayFactory->make();
         $amount = $this->amount($payment);
         $description = Str::limit($this->description($payment), 100, '');
@@ -88,7 +108,12 @@ class IfthenpayPaymentService
             );
         }
 
+        $attempts = $payment->metadata['previous_attempts'] ?? [];
+        if (! empty($payment->metadata['ifthenpay']['transactionId'])) {
+            $attempts[] = ['payment_method' => $payment->metadata['payment_method'], 'ifthenpay' => $payment->metadata['ifthenpay']];
+        }
         $metadata = array_merge($payment->metadata ?? [], [
+            'previous_attempts' => $attempts,
             'provider_env' => config('payments.ifthenpay.env'),
             'payment_method' => $method,
             'ifthenpay' => $result->toArray(),
@@ -114,11 +139,27 @@ class IfthenpayPaymentService
             ->where('provider', 'ifthenpay')
             ->first();
 
-        if (! $payment || $payment->status === 'paid') {
+        if (! $payment) {
             return $payment;
         }
 
-        $method = $payment->metadata['payment_method'] ?? $this->methodFromPayload($payload);
+        $secret = (string) config('payments.ifthenpay.callback_secret');
+        if ($secret === '' || ! is_string($payload['apk'] ?? null) || ! hash_equals($secret, $payload['apk'])) {
+            throw new \RuntimeException('Callback não autenticado.');
+        }
+        if (empty($payment->metadata['ifthenpay']['transactionId'])) {
+            throw new \RuntimeException('Pagamento não inicializado.');
+        }
+
+        // A successful MB WAY callback may arrive after an expired request was retried.
+        $validationPayment = clone $payment;
+        foreach ($payment->metadata['previous_attempts'] ?? [] as $attempt) {
+            if (($attempt['ifthenpay']['transactionId'] ?? null) === ($payload['tid'] ?? null)) {
+                $validationPayment->metadata = $attempt;
+                break;
+            }
+        }
+        $method = $validationPayment->metadata['payment_method'] ?? $this->methodFromPayload($payload);
         $webhook = new WebhookRequest(
             (string) ($payload['val'] ?? ''),
             (string) ($payload['oid'] ?? ''),
@@ -130,9 +171,9 @@ class IfthenpayPaymentService
         $gateway = $this->gatewayFactory->make();
 
         if ($method === 'mbway') {
-            $gateway->mbway()->validateWebhook($webhook, $this->mbwayModel($payment));
+            $gateway->mbway()->validateWebhook($webhook, $this->mbwayModel($validationPayment));
         } else {
-            $gateway->multibancoDynamic()->validateWebhook($webhook, $this->multibancoModel($payment));
+            $gateway->multibancoDynamic()->validateWebhook($webhook, $this->multibancoModel($validationPayment));
         }
 
         return DB::transaction(function () use ($payment) {

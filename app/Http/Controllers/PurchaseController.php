@@ -88,9 +88,13 @@ class PurchaseController extends Controller
         return redirect()->route('purchase.checkout', $payment);
     }
 
-    public function checkout(Payment $payment, PaymentProvider $provider): View
+    public function checkout(Payment $payment, PaymentProvider $provider): View|RedirectResponse
     {
         abort_unless($payment->user_id === Auth::id(), 403);
+
+        if ($payment->status === 'paid') {
+            return redirect()->route('purchase.confirmed', $payment);
+        }
 
         return view('purchases.checkout', [
             'payment' => $payment,

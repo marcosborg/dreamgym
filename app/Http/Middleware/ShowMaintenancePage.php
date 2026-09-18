@@ -32,7 +32,8 @@ class ShowMaintenancePage
 
     private function shouldSkip(Request $request): bool
     {
-        return $request->is('admin*')
+        return $request->routeIs('ifthenpay.callback')
+            || $request->is('admin*')
             || $request->is('livewire*')
             || $request->is('build*')
             || $request->is('brand*')

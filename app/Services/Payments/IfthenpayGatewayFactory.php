@@ -2,6 +2,7 @@
 
 namespace App\Services\Payments;
 
+use GuzzleHttp\Client;
 use Ifthenpay\PaymentGateway\IfthenpayGateway;
 
 class IfthenpayGatewayFactory
@@ -11,8 +12,14 @@ class IfthenpayGatewayFactory
         $env = config('payments.ifthenpay.env', 'sandbox');
         $base = config('payments.ifthenpay');
         $active = $env === 'production'
-            ? array_merge($base, $base['production'] ?? [])
+            ? array_merge($base, array_filter($base['production'] ?? [], fn ($value) => $value !== null && $value !== ''))
             : $base;
+
+        foreach (['backoffice_key', 'mb_key', 'mbway_key', 'callback_secret'] as $key) {
+            if (empty($active[$key])) {
+                throw new \RuntimeException('Configuração ifthenpay incompleta.');
+            }
+        }
 
         return new IfthenpayGateway([
             'backofficeKey' => $active['backoffice_key'],
@@ -26,6 +33,6 @@ class IfthenpayGatewayFactory
                 'key' => $active['mb_key'],
                 'daysToExpire' => $base['multibanco_days_to_expire'],
             ],
-        ]);
+        ], new Client(['timeout' => 20, 'connect_timeout' => 5, 'allow_redirects' => false]));
     }
 }
