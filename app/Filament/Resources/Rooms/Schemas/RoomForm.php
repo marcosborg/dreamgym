@@ -13,8 +13,10 @@ class RoomForm
     {
         return $schema
             ->components([
-                TextInput::make('name')->required()->maxLength(120),
-                Textarea::make('description')->columnSpanFull(),
+                TextInput::make('name')->label('Nome (inglês)')->required()->maxLength(120),
+                Textarea::make('description')->label('Descrição (inglês)')->columnSpanFull(),
+                TextInput::make('name_pt')->label('Nome (português)')->maxLength(120),
+                Textarea::make('description_pt')->label('Descrição (português)')->columnSpanFull(),
                 TextInput::make('capacity')->numeric()->required()->default(1),
                 TextInput::make('slot_price_cents')
                     ->label('Preço por hora (cêntimos)')

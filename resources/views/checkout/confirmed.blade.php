@@ -12,7 +12,7 @@
                 <div class="mt-2 text-sm text-white/85">{{ __('site.access_code_unique_per_booking') }}</div>
             </div>
             <dl class="mt-8 grid gap-4 sm:grid-cols-2">
-                <div><dt class="text-sm text-neutral-500">{{ __('site.room') }}</dt><dd class="font-bold">{{ $booking->room->name }}</dd></div>
+                <div><dt class="text-sm text-neutral-500">{{ __('site.room') }}</dt><dd class="font-bold">{{ $booking->room->localized_name }}</dd></div>
                 <div><dt class="text-sm text-neutral-500">{{ __('site.date') }}</dt><dd class="font-bold">{{ $booking->starts_at->format('d/m/Y') }}</dd></div>
                 <div><dt class="text-sm text-neutral-500">{{ __('site.time') }}</dt><dd class="font-bold">{{ $booking->starts_at->format('H:i') }} - {{ $booking->ends_at->format('H:i') }}</dd></div>
                 @if ($booking->booking_type === \App\Models\Booking::TYPE_GROUP_HOUR)

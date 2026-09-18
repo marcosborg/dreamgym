@@ -19,6 +19,7 @@ class BookingConfirmed extends Mailable
      */
     public function __construct(public Booking $booking)
     {
+        $this->locale($booking->locale ?: config('app.locale'));
     }
 
     /**

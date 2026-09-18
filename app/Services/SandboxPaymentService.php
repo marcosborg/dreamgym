@@ -34,7 +34,7 @@ class SandboxPaymentService
         return DB::transaction(function () use ($payment) {
             $payment->update([
                 'status' => 'paid',
-                'paid_at' => now(),
+                'paid_at' => $payment->paid_at ?? now(),
             ]);
 
             $booking = $payment->booking()->lockForUpdate()->firstOrFail();
@@ -76,13 +76,15 @@ class SandboxPaymentService
     public function completePurchase(Payment $payment): Payment
     {
         return DB::transaction(function () use ($payment) {
+            $payment = Payment::query()->lockForUpdate()->findOrFail($payment->id);
+
             if ($payment->status === 'paid') {
                 return $payment->fresh('user');
             }
 
             $payment->update([
                 'status' => 'paid',
-                'paid_at' => now(),
+                'paid_at' => $payment->paid_at ?? now(),
             ]);
 
             $user = $payment->user()->lockForUpdate()->firstOrFail();
@@ -95,16 +97,7 @@ class SandboxPaymentService
             }
 
             if ($payment->product_type === ProductCatalog::MEMBERSHIP) {
-                $startsAt = $user->membership_expires_at?->isFuture()
-                    ? $user->membership_expires_at
-                    : now();
-
-                $user->update([
-                    'membership_credits' => $user->membership_credits + (int) ($payment->metadata['credits'] ?? ProductCatalog::MEMBERSHIP_CREDITS),
-                    'membership_expires_at' => $startsAt->copy()->addDays(
-                        (int) ($payment->metadata['days'] ?? ProductCatalog::MEMBERSHIP_DAYS),
-                    ),
-                ]);
+                app(MembershipReconciliationService::class)->reconcile($user);
             }
 
             return $payment->fresh('user');

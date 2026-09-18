@@ -38,7 +38,7 @@ class PaymentForm
                 Select::make('status')
                     ->options(['pending' => 'Pending', 'paid' => 'Paid', 'failed' => 'Failed'])
                     ->default('pending')
-                    ->helperText('Novos pagamentos são guardados como pendentes. Use “Marcar como pago” na lista para aplicar créditos e validade.')
+                    ->helperText('Ao guardar como pago, os créditos e a validade são aplicados. A validade parte da data de pagamento indicada.')
                     ->required(),
                 DateTimePicker::make('paid_at')->seconds(false),
             ]);

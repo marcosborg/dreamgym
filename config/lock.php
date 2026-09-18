@@ -3,6 +3,8 @@
 return [
     'provider' => env('LOCK_PROVIDER', 'simulated'),
 
+    'pin_digits' => env('LOCK_PIN_DIGITS', '123456'),
+
     'pin_length' => (int) env('LOCK_PIN_LENGTH', 6),
 
     'access_start_buffer_minutes' => (int) env('LOCK_ACCESS_START_BUFFER_MINUTES', 5),

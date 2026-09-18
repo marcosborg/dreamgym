@@ -23,11 +23,16 @@ class AccessCodeService
     private function uniqueCode(): string
     {
         $pinLength = min(9, max(4, (int) config('lock.pin_length', 6)));
-        $min = 10 ** ($pinLength - 1);
-        $max = (10 ** $pinLength) - 1;
+        $digits = array_values(array_unique(str_split((string) config('lock.pin_digits', '123456'))));
+        if (count($digits) < 2 || preg_match('/[^0-9]/', implode('', $digits))) {
+            throw new \InvalidArgumentException('LOCK_PIN_DIGITS must contain at least two distinct digits.');
+        }
 
         do {
-            $code = (string) random_int($min, $max);
+            $code = '';
+            for ($i = 0; $i < $pinLength; $i++) {
+                $code .= $digits[random_int(0, count($digits) - 1)];
+            }
         } while (AccessCode::query()->where('code', $code)->where('valid_until', '>=', now())->exists());
 
         return $code;

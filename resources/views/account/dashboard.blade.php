@@ -62,7 +62,7 @@
                     <tr class="border-t border-[var(--brand-stone)]">
                         <td class="p-4">{{ $booking->starts_at->format('d/m/Y') }}</td>
                         <td class="p-4">{{ $booking->starts_at->format('H:i') }} - {{ $booking->ends_at->format('H:i') }}</td>
-                        <td class="p-4">{{ $booking->room->name }}</td>
+                        <td class="p-4">{{ $booking->room->localized_name }}</td>
                         <td class="p-4">{{ $booking->status }}</td>
                         <td class="p-4">{{ $booking->booking_type }}</td>
                         <td class="p-4 font-bold">{{ $booking->accessCode?->code ?? '-' }}</td>

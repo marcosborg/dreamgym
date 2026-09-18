@@ -54,7 +54,8 @@
                         @foreach ($slots as $slot)
                             <label class="block">
                                 <input form="booking-form" type="radio" name="starts_at" value="{{ $slot['starts_at']->toDateTimeString() }}" class="peer sr-only" @disabled(! $slot['available']) required>
-                                <span class="block rounded-lg border p-4 text-center font-bold peer-checked:border-[var(--brand-ink)] peer-checked:bg-[var(--brand-ink)] peer-checked:text-white {{ $slot['available'] ? 'cursor-pointer border-[var(--brand-stone)] bg-white' : 'border-neutral-200 bg-neutral-100 text-neutral-400' }}">
+                                <span class="slot-choice block rounded-lg border p-4 text-center font-bold {{ $slot['available'] ? 'cursor-pointer border-[var(--brand-stone)] bg-white' : 'border-neutral-200 bg-neutral-100 text-neutral-400' }}">
+                                    <i class="option-marker" aria-hidden="true"></i>
                                     {{ $slot['starts_at']->format('H:i') }}
                                     <span class="mt-2 flex justify-center gap-1" aria-hidden="true">
                                         @for ($seat = 1; $seat <= $room->capacity; $seat++)

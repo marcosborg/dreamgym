@@ -10,6 +10,8 @@ class Room extends Model
     protected $fillable = [
         'name',
         'description',
+        'name_pt',
+        'description_pt',
         'capacity',
         'slot_price_cents',
         'currency',
@@ -23,6 +25,16 @@ class Room extends Model
             'capacity' => 'integer',
             'slot_price_cents' => 'integer',
         ];
+    }
+
+    public function getLocalizedNameAttribute(): string
+    {
+        return app()->getLocale() === 'pt' ? ($this->name_pt ?: $this->name) : $this->name;
+    }
+
+    public function getLocalizedDescriptionAttribute(): ?string
+    {
+        return app()->getLocale() === 'pt' ? ($this->description_pt ?: $this->description) : $this->description;
     }
 
     public function openingHours(): HasMany

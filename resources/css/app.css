@@ -209,3 +209,23 @@ body {
     color: rgb(82 82 82);
     padding-left: 1rem;
 }
+
+/* Legal copy and selected slots must remain legible on the dark public theme. */
+.legal-panel { color: #f7f7f8; }
+.legal-panel .legal-content, .legal-panel .legal-content * { color: inherit; }
+.legal-panel .legal-content a { color: #ff6070; }
+.legal-panel .legal-content blockquote { color: #b6b6bd; }
+.slot-choice { position: relative; }
+.slot-choice > .option-marker { top: .5rem; right: .5rem; }
+.peer:checked + .slot-choice {
+    border-color: var(--brand-blue);
+    box-shadow: 0 0 0 2px var(--brand-blue);
+    background: #210c10;
+    color: #fff;
+}
+.peer:checked + .slot-choice > .option-marker {
+    background: var(--brand-blue);
+    border-color: var(--brand-blue);
+    opacity: 1;
+}
+.peer:focus-visible + .slot-choice { outline: 2px solid white; outline-offset: 4px; }

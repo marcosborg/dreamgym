@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -93,65 +94,68 @@ class BookingController extends Controller
             }
         }
 
-        $paidWith = null;
-        $status = Booking::STATUS_PENDING;
-        $paymentStatus = 'pending';
-        $singleHourProduct = $catalog->singleHour($room);
-        $priceCents = $isGroup ? $groupProduct['price_cents'] : $singleHourProduct['price_cents'];
+        return DB::transaction(function () use ($request, $data, $room, $startsAt, $endsAt, $isGroup, $seatsReserved, $groupProduct, $catalog, $payments, $user) {
+            $user = $user ? User::query()->lockForUpdate()->findOrFail($user->id) : null;
+            $paidWith = null;
+            $status = Booking::STATUS_PENDING;
+            $paymentStatus = 'pending';
+            $singleHourProduct = $catalog->singleHour($room);
+            $priceCents = $isGroup ? $groupProduct['price_cents'] : $singleHourProduct['price_cents'];
 
-        if (! $isGroup && $user?->hasActiveMembership()) {
-            $request->validate([
-                'terms_accepted' => ['accepted'],
+            if (! $isGroup && $user?->hasActiveMembership() && $startsAt->lessThan($user->membership_expires_at)) {
+                $request->validate([
+                    'terms_accepted' => ['accepted'],
+                ]);
+
+                $user->decrement('membership_credits');
+                $paidWith = Booking::PAID_WITH_MEMBERSHIP;
+                $status = Booking::STATUS_CONFIRMED;
+                $paymentStatus = 'paid';
+                $priceCents = 0;
+            } elseif (! $isGroup && $user && $user->session_credits > 0) {
+                $request->validate([
+                    'terms_accepted' => ['accepted'],
+                ]);
+
+                $user->decrement('session_credits');
+                $paidWith = Booking::PAID_WITH_CREDITS;
+                $status = Booking::STATUS_CONFIRMED;
+                $paymentStatus = 'paid';
+                $priceCents = 0;
+            } else {
+                $paidWith = Booking::PAID_WITH_PAYMENT;
+            }
+
+            $booking = Booking::create([
+                'room_id' => $room->id,
+                'user_id' => $user?->id,
+                'booking_type' => $data['booking_type'],
+                'seats_reserved' => $seatsReserved,
+                'customer_name' => $data['customer_name'],
+                'customer_email' => $data['customer_email'],
+                'customer_phone' => $data['customer_phone'] ?? null,
+                'locale' => app()->getLocale(),
+                'bringing_children' => (bool) $data['bringing_children'],
+                'children_responsibility_accepted_at' => (bool) $data['bringing_children'] ? now() : null,
+                'terms_accepted_at' => $request->boolean('terms_accepted') ? now() : null,
+                'starts_at' => $startsAt,
+                'ends_at' => $endsAt,
+                'status' => $status,
+                'payment_status' => $paymentStatus,
+                'paid_with' => $paidWith,
+                'price_cents' => $priceCents,
+                'currency' => $room->currency,
             ]);
 
-            $user->decrement('membership_credits');
-            $paidWith = Booking::PAID_WITH_MEMBERSHIP;
-            $status = Booking::STATUS_CONFIRMED;
-            $paymentStatus = 'paid';
-            $priceCents = 0;
-        } elseif (! $isGroup && $user && $user->session_credits > 0) {
-            $request->validate([
-                'terms_accepted' => ['accepted'],
-            ]);
+            if ($booking->payment_status === 'paid') {
+                $payments->confirmCoveredBooking($booking);
 
-            $user->decrement('session_credits');
-            $paidWith = Booking::PAID_WITH_CREDITS;
-            $status = Booking::STATUS_CONFIRMED;
-            $paymentStatus = 'paid';
-            $priceCents = 0;
-        } else {
-            $paidWith = Booking::PAID_WITH_PAYMENT;
-        }
+                return redirect()->route('booking.confirmed', $booking);
+            }
 
-        $booking = Booking::create([
-            'room_id' => $room->id,
-            'user_id' => $user?->id,
-            'booking_type' => $data['booking_type'],
-            'seats_reserved' => $seatsReserved,
-            'customer_name' => $data['customer_name'],
-            'customer_email' => $data['customer_email'],
-            'customer_phone' => $data['customer_phone'] ?? null,
-            'locale' => app()->getLocale(),
-            'bringing_children' => (bool) $data['bringing_children'],
-            'children_responsibility_accepted_at' => (bool) $data['bringing_children'] ? now() : null,
-            'terms_accepted_at' => $request->boolean('terms_accepted') ? now() : null,
-            'starts_at' => $startsAt,
-            'ends_at' => $endsAt,
-            'status' => $status,
-            'payment_status' => $paymentStatus,
-            'paid_with' => $paidWith,
-            'price_cents' => $priceCents,
-            'currency' => $room->currency,
-        ]);
+            $payments->createPayment($booking);
 
-        if ($booking->payment_status === 'paid') {
-            $payments->confirmCoveredBooking($booking);
-
-            return redirect()->route('booking.confirmed', $booking);
-        }
-
-        $payments->createPayment($booking);
-
-        return redirect()->route('checkout.show', $booking);
+            return redirect()->route('checkout.show', $booking);
+        });
     }
 }

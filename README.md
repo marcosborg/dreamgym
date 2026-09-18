@@ -82,3 +82,27 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+### September client corrections
+
+After pulling this release, run `php artisan migrate --force` and rebuild the
+configuration/view cache (`php artisan optimize:clear`, then `php artisan optimize`).
+The compiled public assets are included in Git.
+
+Run `php artisan memberships:reconcile` first to preview historical membership
+balances. Review the table (particularly uncovered bookings), then run
+`php artisan memberships:reconcile --apply`. `--user=ID` limits either operation.
+The reconstruction uses paid membership calendar dates, cumulative renewals, individual
+reservations and timely cancellations. It also associates legacy reservations without a separate recorded payment with an account by matching email; paid hourly reservations and
+session-pack reservations are excluded. It replaces the membership balance from
+that history, so review manually granted credits separately. Repeating it does not
+add credits again. No confirmation emails or payment requests are sent by this job.
+
+Set the Portuguese room name and description in Rooms & Pricing. Empty translations
+fall back to the editable English fields. New access codes use `LOCK_PIN_DIGITS=123456`;
+existing codes are preserved because changing a code also requires configuring the
+physical lock and notifying its holder. The `simulated` driver does not operate a
+real lock; `manual_ihr` requires manual programming.
+
+`MAIL_MAILER=log` does not deliver email, even outside sandbox. Configure the host's
+working SMTP or sendmail transport and verify delivery before claiming emails work.
