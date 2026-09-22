@@ -1,6 +1,10 @@
 <?php
 
 return [
+    'booking_number' => 'Booking',
+    'payment_hold_expired' => 'This booking has expired. Select a new slot before paying.',
+    'payment_requires_review' => 'Payment received, but this booking could not be confirmed. Contact info@dreamgym.pt with your booking number to reschedule or request a refund.',
+
     'nav_book' => 'Book',
     'nav_admin' => 'Admin',
     'hero_title' => 'Your private gym room, booked hourly.',
@@ -106,7 +110,7 @@ return [
     'children_responsibility_acceptance' => 'I declare that the children remain under my responsibility throughout their stay in the space.',
     'terms_acceptance_html' => 'I accept the <a class="underline" href=":url" target="_blank">Terms and Conditions</a>.',
     'terms_cancellation_title' => 'Cancellations',
-    'terms_cancellation_body' => 'Cancellation up to 24 hours before the booking starts returns the session credit to the customer account. After that deadline, the credit is not returned and the session is considered lost.',
+    'terms_cancellation_body' => 'Cancellation up to 12 hours before the booking starts returns the session credit to the customer account. After that deadline, the credit is not returned and the session is considered lost.',
     'terms_children_title' => 'Children in the space',
     'terms_children_body' => 'When the customer indicates that they will bring children, they declare that the children remain under their responsibility throughout their stay in the space.',
     'how_it_works_title' => 'How It Works',
@@ -158,7 +162,7 @@ return [
     'equipment_eyebrow' => 'The space',
     'equipment_title' => 'Everything you need for a complete workout.',
     'equipment_intro' => '62.5 m² arranged into functional, strength and cardio areas, with selected equipment so you can train freely.',
-    'cancellation_policy_short' => 'Cancellations up to 24 hours before return the credit; after that deadline the session is lost.',
+    'cancellation_policy_short' => 'Cancellations up to 12 hours before return the credit; after that deadline the session is lost.',
     'cancel_booking' => 'Cancel',
     'booking_cancelled' => 'Booking cancelled.',
     'access_code_unique_per_booking' => 'This code is unique to this booking and only works within the time window shown.',

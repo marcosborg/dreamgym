@@ -15,6 +15,7 @@
                 <p class="mt-2">{{ __('site.access_preparing') }}</p>
                 @endif
             </div>
+            <p class="mt-4 font-bold">{{ __('site.booking_number') }}: #{{ $booking->id }}</p>
             <dl class="mt-8 grid gap-4 sm:grid-cols-2">
                 <div><dt class="text-sm text-neutral-500">{{ __('site.room') }}</dt><dd class="font-bold">{{ $booking->room->localized_name }}</dd></div>
                 <div><dt class="text-sm text-neutral-500">{{ __('site.date') }}</dt><dd class="font-bold">{{ $booking->starts_at->format('d/m/Y') }}</dd></div>

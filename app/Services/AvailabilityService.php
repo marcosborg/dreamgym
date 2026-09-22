@@ -91,7 +91,16 @@ class AvailabilityService
     {
         return (int) Booking::query()
             ->where('room_id', $room->id)
-            ->whereIn('status', [Booking::STATUS_PENDING, Booking::STATUS_CONFIRMED])
+            ->where(function ($query) {
+                $query->where('status', Booking::STATUS_CONFIRMED)
+                    ->orWhere(function ($pending) {
+                        $pending->where('status', Booking::STATUS_PENDING)->where('starts_at', '>', now())
+                            ->where(function ($deadline) {
+                                $deadline->where('payment_expires_at', '>', now())
+                                    ->orWhere(fn ($legacy) => $legacy->whereNull('payment_expires_at')->where('created_at', '>', now()->subMinutes(15)));
+                            });
+                    });
+            })
             ->when($ignoreBooking, fn ($query) => $query->whereKeyNot($ignoreBooking->id))
             ->where('starts_at', '<', $endsAt)
             ->where('ends_at', '>', $startsAt)

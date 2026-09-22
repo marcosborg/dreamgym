@@ -3,6 +3,7 @@
 
 {{ __('site.email_intro', ['name' => $booking->customer_name]) }}
 
+**{{ __('site.booking_number') }}:** #{{ $booking->id }}<br>
 **{{ __('site.room') }}:** {{ $booking->room->localized_name }}<br>
 **{{ __('site.date') }}:** {{ $booking->starts_at->translatedFormat('d/m/Y') }}  
 **{{ __('site.time') }}:** {{ $booking->starts_at->format('H:i') }} - {{ $booking->ends_at->format('H:i') }}  

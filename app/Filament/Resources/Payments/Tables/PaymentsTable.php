@@ -25,6 +25,7 @@ class PaymentsTable
                 TextColumn::make('product_type')->badge(),
                 TextColumn::make('amount_cents')->money('EUR', divideBy: 100),
                 TextColumn::make('status')->badge(),
+                TextColumn::make('metadata.review_reason')->label('Ação necessária')->limit(65)->color('danger')->placeholder('—'),
                 TextColumn::make('provider'),
                 TextColumn::make('paid_at')->dateTime('d/m/Y H:i')->sortable(),
             ])

@@ -1,13 +1,14 @@
 @extends('layouts.public')
 
 @section('content')
-    @if ($payment->status === 'pending' && ! empty($payment->metadata['ifthenpay']['transactionId']))
+    @if ($payment->status === 'pending' && ! $booking->paymentHoldExpired() && ! empty($payment->metadata['ifthenpay']['transactionId']))
         <script>setTimeout(() => window.location.reload(), 10000);</script>
     @endif
     <section class="section max-w-3xl py-12">
         <div class="rounded-lg border border-[var(--brand-stone)] bg-white p-8">
             <h1 class="text-3xl font-black">{{ __('site.checkout_title') }}</h1>
             <p class="mt-3 text-neutral-700">{{ __('site.checkout_copy') }}</p>
+            <p class="mt-4 font-bold">{{ __('site.booking_number') }}: #{{ $booking->id }}</p>
             <dl class="mt-8 grid gap-4 sm:grid-cols-2">
                 <div><dt class="text-sm text-neutral-500">{{ __('site.room') }}</dt><dd class="font-bold">{{ $booking->room->localized_name }}</dd></div>
                 <div><dt class="text-sm text-neutral-500">{{ __('site.date') }}</dt><dd class="font-bold">{{ $booking->starts_at->format('d/m/Y') }}</dd></div>
@@ -17,7 +18,11 @@
             @if (session('status'))
                 <div class="mt-6 rounded border border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-900">{{ session('status') }}</div>
             @endif
-            @if (($payment->metadata['payment_method'] ?? null) === 'multibanco')
+            @if ($payment->metadata['requires_review'] ?? false)
+                <p class="mt-6 font-bold text-red-700">{{ __('site.payment_requires_review') }}</p>
+            @elseif ($booking->paymentHoldExpired() || $booking->status === 'cancelled')
+                <p class="mt-6 font-bold text-red-700">{{ __('site.payment_hold_expired') }}</p>
+            @elseif (($payment->metadata['payment_method'] ?? null) === 'multibanco')
                 <div class="mt-6 rounded-lg border border-[var(--brand-stone)] bg-neutral-50 p-5">
                     <h2 class="text-lg font-black">{{ __('site.multibanco_reference') }}</h2>
                     <dl class="mt-4 grid gap-3 sm:grid-cols-3">
@@ -33,7 +38,7 @@
                     <p class="mt-2 text-sm text-neutral-700">{{ __('site.payment_waiting_callback') }}</p>
                 </div>
             @endif
-            @if (empty($payment->metadata['ifthenpay']['transactionId']) || (($payment->metadata['payment_method'] ?? '') === 'mbway' && ! empty($payment->metadata['ifthenpay']['expireDate']) && \Carbon\Carbon::parse($payment->metadata['ifthenpay']['expireDate'])->isPast()))
+            @if ($booking->status === 'pending' && ! $booking->paymentHoldExpired() && (empty($payment->metadata['ifthenpay']['transactionId']) || (($payment->metadata['payment_method'] ?? '') === 'mbway' && ! empty($payment->metadata['ifthenpay']['expireDate']) && \Carbon\Carbon::parse($payment->metadata['ifthenpay']['expireDate'])->isPast())))
             <form method="POST" action="{{ route('checkout.complete', $booking) }}" class="mt-8">
                 @csrf
                 @if ($paymentProvider === 'ifthenpay')

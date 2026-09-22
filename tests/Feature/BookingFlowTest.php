@@ -163,7 +163,7 @@ class BookingFlowTest extends TestCase
             'currency' => 'EUR',
         ]);
 
-        $this->from(route('checkout.show', $booking))
+        $this->withSession(['guest_booking_ids' => [$booking->id]])->from(route('checkout.show', $booking))
             ->post(route('checkout.complete', $booking))
             ->assertRedirect(route('checkout.show', $booking))
             ->assertSessionHasErrors('terms_accepted');
@@ -187,7 +187,7 @@ class BookingFlowTest extends TestCase
             'currency' => 'EUR',
         ]);
 
-        $this->post(route('checkout.complete', $booking), [
+        $this->withSession(['guest_booking_ids' => [$booking->id]])->post(route('checkout.complete', $booking), [
             'terms_accepted' => '1',
         ])->assertRedirect(route('booking.confirmed', $booking));
 
@@ -653,8 +653,8 @@ class BookingFlowTest extends TestCase
             'customer_name' => 'Customer',
             'customer_email' => 'late-cancel@example.test',
             'locale' => 'pt',
-            'starts_at' => '2026-06-06 10:00:00',
-            'ends_at' => '2026-06-06 11:00:00',
+            'starts_at' => '2026-06-05 22:00:00',
+            'ends_at' => '2026-06-05 23:00:00',
             'status' => 'confirmed',
             'payment_status' => 'paid',
             'paid_with' => Booking::PAID_WITH_CREDITS,

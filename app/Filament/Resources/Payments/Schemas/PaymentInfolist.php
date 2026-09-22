@@ -16,6 +16,7 @@ class PaymentInfolist
                 TextEntry::make('amount_cents')->money('EUR', divideBy: 100),
                 TextEntry::make('status')->badge(),
                 TextEntry::make('provider'),
+                TextEntry::make('metadata.review_reason')->label('Ação necessária')->color('danger'),
                 TextEntry::make('paid_at')->dateTime('d/m/Y H:i'),
             ]);
     }

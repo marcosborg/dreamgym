@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Mail\BookingConfirmed;
 use App\Models\Booking;
 use App\Models\Payment;
+use App\Models\Room;
 use App\Services\Locks\LockProvisioningService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -33,6 +34,26 @@ class SandboxPaymentService
     public function complete(Payment $payment): Booking
     {
         return DB::transaction(function () use ($payment) {
+            Room::query()->lockForUpdate()->findOrFail($payment->booking->room_id);
+            $payment = Payment::query()->lockForUpdate()->findOrFail($payment->id);
+            $booking = $payment->booking()->lockForUpdate()->firstOrFail();
+            if ($payment->status === 'paid') {
+                return $booking->fresh(['payment', 'accessCode', 'room']);
+            }
+            if ($booking->status === Booking::STATUS_CANCELLED || ! $booking->starts_at->isFuture()
+                || app(AvailabilityService::class)->hasConflict($booking->room, $booking->starts_at, $booking->ends_at, $booking, $booking->seats_reserved, $booking->booking_type === Booking::TYPE_GROUP_HOUR)) {
+                $payment->update([
+                    'status' => 'paid', 'paid_at' => now(),
+                    'metadata' => array_merge($payment->metadata ?? [], ['requires_review' => true, 'review_reason' => 'Pagamento recebido sem vaga disponível ou após cancelamento/início da reserva. Contactar o cliente para reagendamento ou reembolso.']),
+                ]);
+                // Preserve cancelled bookings and never create access for a released/occupied slot.
+                if ($booking->status === Booking::STATUS_PENDING) {
+                    $booking->update(['status' => Booking::STATUS_CANCELLED, 'payment_status' => 'paid', 'cancelled_at' => now()]);
+                }
+                Log::warning('Pagamento requer revisão manual.', ['payment_id' => $payment->id, 'booking_id' => $booking->id]);
+
+                return $booking->fresh(['payment', 'accessCode', 'room']);
+            }
             $payment->update([
                 'status' => 'paid',
                 'paid_at' => $payment->paid_at ?? now(),

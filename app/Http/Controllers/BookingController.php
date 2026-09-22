@@ -6,6 +6,8 @@ use App\Models\Booking;
 use App\Models\Room;
 use App\Models\User;
 use App\Services\AvailabilityService;
+use App\Services\Payments\IfthenpayPaymentService;
+use App\Services\Payments\PaymentProvider;
 use App\Services\ProductCatalog;
 use App\Services\SandboxPaymentService;
 use Carbon\Carbon;
@@ -95,6 +97,10 @@ class BookingController extends Controller
         }
 
         return DB::transaction(function () use ($request, $data, $room, $startsAt, $endsAt, $isGroup, $seatsReserved, $groupProduct, $catalog, $payments, $user) {
+            $room = Room::query()->lockForUpdate()->findOrFail($room->id);
+            abort_unless(app(AvailabilityService::class)->isAvailableRange(
+                $room, $startsAt, $endsAt, seatsRequested: $seatsReserved, requiresEmptySlot: $isGroup,
+            ), 422, __('site.slot_unavailable'));
             $user = $user ? User::query()->lockForUpdate()->findOrFail($user->id) : null;
             $paidWith = null;
             $status = Booking::STATUS_PENDING;
@@ -145,7 +151,12 @@ class BookingController extends Controller
                 'paid_with' => $paidWith,
                 'price_cents' => $priceCents,
                 'currency' => $room->currency,
+                'payment_expires_at' => $status === Booking::STATUS_PENDING ? now()->addMinutes(15)->min($startsAt) : null,
             ]);
+
+            if (! $user) {
+                $request->session()->push('guest_booking_ids', $booking->id);
+            }
 
             if ($booking->payment_status === 'paid') {
                 $payments->confirmCoveredBooking($booking);
@@ -153,7 +164,11 @@ class BookingController extends Controller
                 return redirect()->route('booking.confirmed', $booking);
             }
 
-            $payments->createPayment($booking);
+            if (app(PaymentProvider::class)->isIfthenpay()) {
+                app(IfthenpayPaymentService::class)->createPayment($booking);
+            } else {
+                $payments->createPayment($booking);
+            }
 
             return redirect()->route('checkout.show', $booking);
         });

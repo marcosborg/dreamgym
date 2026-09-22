@@ -69,6 +69,11 @@ class IfthenpayPaymentService
     public function initialize(Payment $payment, string $method, ?string $mobileNumber = null): Payment
     {
         return DB::transaction(function () use ($payment, $method, $mobileNumber) {
+            if ($payment->booking_id) {
+                Room::query()->lockForUpdate()->findOrFail($payment->booking->room_id);
+                $booking = Booking::query()->lockForUpdate()->findOrFail($payment->booking_id);
+                abort_if($booking->status === Booking::STATUS_CANCELLED || $booking->paymentHoldExpired(), 422, __('site.payment_hold_expired'));
+            }
             $payment = Payment::query()->lockForUpdate()->findOrFail($payment->id);
             if ($payment->status === 'paid') {
                 return $payment;
@@ -129,6 +134,12 @@ class IfthenpayPaymentService
             'metadata' => $metadata,
         ]);
 
+        if ($payment->booking_id) {
+            $expires = $result->toArray()['expireDate'] ?? null;
+            $deadline = $expires ? Carbon::parse($expires) : now()->addMinutes(15);
+            $payment->booking->update(['payment_expires_at' => $deadline->min($payment->booking->starts_at)]);
+        }
+
         return $payment->fresh(['booking', 'user']);
     }
 
@@ -177,6 +188,9 @@ class IfthenpayPaymentService
         }
 
         return DB::transaction(function () use ($payment) {
+            if ($payment->booking_id) {
+                Room::query()->lockForUpdate()->findOrFail($payment->booking->room_id);
+            }
             $locked = Payment::query()->lockForUpdate()->findOrFail($payment->id);
 
             if ($locked->status === 'paid') {

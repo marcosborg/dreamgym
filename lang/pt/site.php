@@ -1,6 +1,10 @@
 <?php
 
 return [
+    'booking_number' => 'Reserva',
+    'payment_hold_expired' => 'O prazo desta reserva terminou. Escolhe um novo horário antes de pagar.',
+    'payment_requires_review' => 'Recebemos o pagamento, mas não foi possível confirmar esta reserva. Contacta info@dreamgym.pt com o número da reserva para reagendamento ou reembolso.',
+
     'nav_book' => 'Reservar',
     'nav_admin' => 'Admin',
     'hero_title' => 'A tua sala de treino privada, reservada de hora a hora.',
@@ -106,7 +110,7 @@ return [
     'children_responsibility_acceptance' => 'Declaro que as crianças permanecem sob minha responsabilidade durante toda a permanência no espaço.',
     'terms_acceptance_html' => 'Aceito os <a class="underline" href=":url" target="_blank">Termos e Condições</a>.',
     'terms_cancellation_title' => 'Cancelamentos',
-    'terms_cancellation_body' => 'O cancelamento até 24 horas antes do início da reserva devolve o crédito de sessão à conta do cliente. Após esse prazo, o crédito não é devolvido e a sessão é considerada perdida.',
+    'terms_cancellation_body' => 'O cancelamento até 12 horas antes do início da reserva devolve o crédito de sessão à conta do cliente. Após esse prazo, o crédito não é devolvido e a sessão é considerada perdida.',
     'terms_children_title' => 'Crianças no espaço',
     'terms_children_body' => 'Quando o cliente indica que vai trazer crianças, declara que estas permanecem sob a sua responsabilidade durante toda a permanência no espaço.',
     'how_it_works_title' => 'Como Funciona',
@@ -158,7 +162,7 @@ return [
     'equipment_eyebrow' => 'O espaço',
     'equipment_title' => 'Tudo o que precisas para um treino completo.',
     'equipment_intro' => '62,5 m² organizados em áreas de treino funcional, força e cardio, com equipamentos selecionados para treinares com liberdade.',
-    'cancellation_policy_short' => 'Cancelamentos até 24 horas antes devolvem o crédito; depois desse prazo a sessão é perdida.',
+    'cancellation_policy_short' => 'Cancelamentos até 12 horas antes devolvem o crédito; depois desse prazo a sessão é perdida.',
     'cancel_booking' => 'Cancelar',
     'booking_cancelled' => 'Reserva cancelada.',
     'access_code_unique_per_booking' => 'Este código é único para esta reserva e só funciona dentro da janela horária indicada.',

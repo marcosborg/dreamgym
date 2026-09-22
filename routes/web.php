@@ -9,6 +9,7 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\PersonalTrainerPhotoController;
 use App\Http\Controllers\PersonalTrainerSubmissionController;
 use App\Http\Controllers\PurchaseController;
+use App\Http\Middleware\AuthorizeBookingAccess;
 use App\Models\LegalTermSection;
 use App\Models\PersonalTrainer;
 use App\Models\Room;
@@ -43,9 +44,9 @@ Route::post('/purchase', [PurchaseController::class, 'store'])->name('purchase.s
 Route::get('/purchase/{payment}/checkout', [PurchaseController::class, 'checkout'])->middleware('auth')->name('purchase.checkout');
 Route::post('/purchase/{payment}/complete', [PurchaseController::class, 'complete'])->middleware('auth')->name('purchase.complete');
 Route::get('/purchase/{payment}/confirmed', [PurchaseController::class, 'confirmed'])->middleware('auth')->name('purchase.confirmed');
-Route::get('/checkout/{booking}', [CheckoutController::class, 'show'])->name('checkout.show');
-Route::post('/checkout/{booking}/complete', [CheckoutController::class, 'complete'])->name('checkout.complete');
-Route::get('/booking/{booking}/confirmed', [CheckoutController::class, 'confirmed'])->name('booking.confirmed');
+Route::get('/checkout/{booking}', [CheckoutController::class, 'show'])->middleware(AuthorizeBookingAccess::class)->name('checkout.show');
+Route::post('/checkout/{booking}/complete', [CheckoutController::class, 'complete'])->middleware(AuthorizeBookingAccess::class)->name('checkout.complete');
+Route::get('/booking/{booking}/confirmed', [CheckoutController::class, 'confirmed'])->middleware(AuthorizeBookingAccess::class)->name('booking.confirmed');
 Route::get('/ifthenpay/callback', IfthenpayCallbackController::class)->name('ifthenpay.callback');
 Route::get('/lang/{locale}', LocaleController::class)->name('locale.switch');
 Route::get('/media/{path}', PersonalTrainerPhotoController::class)

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\Locks\LockProvisioningService;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -48,6 +49,7 @@ class Booking extends Model
         'currency',
         'payment_reference',
         'confirmed_at',
+        'payment_expires_at',
         'cancelled_at',
     ];
 
@@ -57,6 +59,7 @@ class Booking extends Model
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
             'confirmed_at' => 'datetime',
+            'payment_expires_at' => 'datetime',
             'cancelled_at' => 'datetime',
             'children_responsibility_accepted_at' => 'datetime',
             'terms_accepted_at' => 'datetime',
@@ -92,6 +95,16 @@ class Booking extends Model
                 throw ValidationException::withMessages(['status' => 'Cancele e revogue o acesso antes de eliminar a reserva.']);
             }
         });
+    }
+
+    public function paymentDeadline(): Carbon
+    {
+        return ($this->payment_expires_at ?? ($this->created_at ?? now())->copy()->addMinutes(15))->min($this->starts_at);
+    }
+
+    public function paymentHoldExpired(): bool
+    {
+        return $this->status === self::STATUS_PENDING && $this->paymentDeadline()->lessThanOrEqualTo(now());
     }
 
     public function canBeCancelledByCustomer(): bool

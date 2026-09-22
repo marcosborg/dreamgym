@@ -19,7 +19,7 @@ class CheckoutController extends Controller
             ? $ifthenpay->createPayment($booking)
             : $payments->createPayment($booking));
 
-        if ($booking->payment_status === 'paid') {
+        if ($booking->payment_status === 'paid' && $booking->status === Booking::STATUS_CONFIRMED) {
             return redirect()->route('booking.confirmed', $booking);
         }
 
@@ -43,7 +43,7 @@ class CheckoutController extends Controller
 
         $data = $request->validate($rules);
 
-        abort_if($booking->status === Booking::STATUS_CANCELLED, 422);
+        abort_if($booking->status === Booking::STATUS_CANCELLED || $booking->paymentHoldExpired(), 422, __('site.payment_hold_expired'));
 
         $booking->update([
             'terms_accepted_at' => $booking->terms_accepted_at ?? now(),
@@ -78,6 +78,7 @@ class CheckoutController extends Controller
 
     public function confirmed(Booking $booking): View
     {
+        abort_unless($booking->status === Booking::STATUS_CONFIRMED && $booking->payment_status === 'paid', 404);
         $booking->load(['room', 'payment', 'accessCode']);
 
         return view('checkout.confirmed', compact('booking'));

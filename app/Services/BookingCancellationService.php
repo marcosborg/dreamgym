@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 class BookingCancellationService
 {
-    public const CREDIT_REFUND_CUTOFF_HOURS = 24;
+    public const CREDIT_REFUND_CUTOFF_HOURS = 12;
 
     public function cancel(Booking $booking): Booking
     {
