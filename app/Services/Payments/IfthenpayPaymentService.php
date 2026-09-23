@@ -143,6 +143,52 @@ class IfthenpayPaymentService
         return $payment->fresh(['booking', 'user']);
     }
 
+    /** Recover an authenticated MB WAY payment when delivery of its callback is delayed. */
+    public function reconcileMbway(Payment $payment): Payment
+    {
+        $payment = $payment->fresh();
+        if ($payment->provider !== 'ifthenpay' || $payment->status === 'paid') {
+            return $payment;
+        }
+        $attempts = array_merge($payment->metadata['previous_attempts'] ?? [], [[
+            'payment_method' => $payment->metadata['payment_method'] ?? null,
+            'ifthenpay' => $payment->metadata['ifthenpay'] ?? [],
+        ]]);
+        $gateway = null;
+        $lookupFailure = null;
+        foreach ($attempts as $attempt) {
+            $transactionId = $attempt['ifthenpay']['transactionId'] ?? null;
+            if (($attempt['payment_method'] ?? null) !== 'mbway' || ! is_string($transactionId) || $transactionId === '') {
+                continue;
+            }
+            $gateway ??= $this->gatewayFactory->make();
+            try {
+                $status = $gateway->mbway()->getPaymentStatus($transactionId);
+            } catch (Throwable $exception) {
+                $lookupFailure = $exception;
+
+                continue;
+            }
+            if ($status !== Status::PAID) {
+                continue;
+            }
+            // Use the same locked, idempotent fulfillment as the callback. Never initialize a charge here.
+            if ($payment->booking_id) {
+                $this->completion->complete($payment);
+            } else {
+                $this->completion->completePurchase($payment);
+            }
+
+            return $payment->fresh(['booking', 'user']);
+        }
+
+        if ($lookupFailure) {
+            throw $lookupFailure;
+        }
+
+        return $payment;
+    }
+
     public function handleCallback(array $payload): ?Payment
     {
         $payment = Payment::query()

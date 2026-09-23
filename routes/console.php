@@ -32,19 +32,22 @@ Artisan::command('ifthenpay:register-webhooks {--url= : Public callback URL, def
     $url = $this->option('url') ?: route('ifthenpay.callback');
     $method = $this->option('method');
     $gateway = $factory->make();
+    // The provider returned an empty anti-phishing placeholder in live callbacks.
+    // Register the configured key explicitly; never print the returned URL.
+    $params = ['apk' => rawurlencode((string) config('payments.ifthenpay.callback_secret'))];
 
     if (! str_starts_with($url, 'https://')) {
         $this->warn('The callback URL should be public HTTPS before using this in production.');
     }
 
     if (in_array($method, ['all', 'multibanco'], true)) {
-        $registered = $gateway->multibancoDynamic()->registerWebhook($url);
-        $this->info('Multibanco webhook registered: '.$registered);
+        $gateway->multibancoDynamic()->registerWebhook($url, $params);
+        $this->info('Multibanco webhook registered.');
     }
 
     if (in_array($method, ['all', 'mbway'], true)) {
-        $registered = $gateway->mbway()->registerWebhook($url);
-        $this->info('MB WAY webhook registered: '.$registered);
+        $gateway->mbway()->registerWebhook($url, $params);
+        $this->info('MB WAY webhook registered.');
     }
 
     if (! in_array($method, ['all', 'multibanco', 'mbway'], true)) {
