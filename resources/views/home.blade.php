@@ -14,7 +14,7 @@
                 <a href="{{ route('bookings.index') }}" class="btn-primary btn-primary-lg mt-9">{{ __('site.book_now') }} <span class="ml-3">→</span></a>
             </div>
             <div class="dark-panel mx-auto w-full max-w-lg border-[var(--brand-blue)] p-8 lg:mt-28">
-                <div class="eyebrow">Private training room</div>
+                <div class="eyebrow">{{ $room?->localized_name ?? (app()->getLocale() === 'pt' ? 'Sala de treino privada' : 'Private training room') }}</div>
                 <div class="mt-12 text-6xl font-black">1h</div>
                 <div class="text-lg text-neutral-300">{{ __('site.training_hours') }}</div>
                 <div class="mt-14 flex justify-between border-t border-[var(--brand-stone)] pt-6 text-sm">
@@ -25,7 +25,7 @@
         </div>
         <div class="section grid gap-px border-t border-[var(--brand-stone)] sm:grid-cols-2 lg:grid-cols-4">
             @foreach ([
-                ['24/7', app()->getLocale() === 'pt' ? 'No teu horário' : 'On your schedule'],
+                [app()->getLocale() === 'pt' ? '365 dias por ano' : '365 days a year', app()->getLocale() === 'pt' ? 'No teu horário' : 'On your schedule'],
                 [__('site.nav_book'), app()->getLocale() === 'pt' ? 'Online em segundos' : 'Online in seconds'],
                 [__('site.access_code'), app()->getLocale() === 'pt' ? 'Único e temporário' : 'Unique and temporary'],
                 [app()->getLocale() === 'pt' ? 'Espaço privado' : 'Private space', app()->getLocale() === 'pt' ? 'Treina à tua maneira' : 'Train your way'],
