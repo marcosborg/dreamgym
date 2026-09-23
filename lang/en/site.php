@@ -17,7 +17,7 @@ return [
     'nav_book' => 'Book',
     'nav_admin' => 'Admin',
     'hero_title' => 'Your private gym room, booked hourly.',
-    'hero_copy' => 'Train with focus, no crowding, and temporary code access. Pick a time, confirm payment, and receive the code by email.',
+    'hero_copy' => 'Train with focus, limited capacity, and temporary code access. Pick a time, confirm payment, and receive the code by email.',
     'book_now' => 'Book now',
     'marketing_title' => 'Training without queues, waiting, or distractions.',
     'benefit_1' => 'Private room equipped for strength, cardio, and mobility.',

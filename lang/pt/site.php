@@ -17,7 +17,7 @@ return [
     'nav_book' => 'Reservar',
     'nav_admin' => 'Admin',
     'hero_title' => 'A tua sala de treino privada, reservada de hora a hora.',
-    'hero_copy' => 'Treina com foco, sem lotação e com acesso por código temporário. Escolhe a hora, confirma o pagamento e recebe o código por email.',
+    'hero_copy' => 'Treina com foco, com lotação limitada e com acesso por código temporário. Escolhe a hora, confirma o pagamento e recebe o código por email.',
     'book_now' => 'Reservar agora',
     'marketing_title' => 'Treino sem filas, sem esperas e com controlo total.',
     'benefit_1' => 'Sala privada equipada para força, cardio e mobilidade.',
