@@ -10,6 +10,7 @@ use App\Services\Payments\IfthenpayPaymentService;
 use App\Services\Payments\PaymentProvider;
 use App\Services\ProductCatalog;
 use App\Services\SandboxPaymentService;
+use App\Services\SessionCreditService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -104,6 +105,8 @@ class BookingController extends Controller
                 $room, $startsAt, $endsAt, seatsRequested: $seatsReserved, requiresEmptySlot: $isGroup,
             ), 422, __('site.slot_unavailable'));
             $user = $user ? User::query()->lockForUpdate()->findOrFail($user->id) : null;
+            $creditLotId = null;
+            $sessionCredits = app(SessionCreditService::class);
             $paidWith = null;
             $status = Booking::STATUS_PENDING;
             $paymentStatus = 'pending';
@@ -120,12 +123,12 @@ class BookingController extends Controller
                 $status = Booking::STATUS_CONFIRMED;
                 $paymentStatus = 'paid';
                 $priceCents = 0;
-            } elseif (! $isGroup && $user && $user->session_credits > 0) {
+            } elseif (! $isGroup && $user && $sessionCredits->availableFor($user, $startsAt) > 0) {
                 $request->validate([
                     'terms_accepted' => ['accepted'],
                 ]);
 
-                $user->decrement('session_credits');
+                $creditLotId = $sessionCredits->consume($user, $startsAt);
                 $paidWith = Booking::PAID_WITH_CREDITS;
                 $status = Booking::STATUS_CONFIRMED;
                 $paymentStatus = 'paid';
@@ -137,6 +140,7 @@ class BookingController extends Controller
             $booking = Booking::create([
                 'room_id' => $room->id,
                 'user_id' => $user?->id,
+                'session_credit_lot_id' => $creditLotId,
                 'booking_type' => $data['booking_type'],
                 'seats_reserved' => $seatsReserved,
                 'customer_name' => $data['customer_name'],

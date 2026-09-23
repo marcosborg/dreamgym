@@ -144,10 +144,7 @@ class SandboxPaymentService
             $user = $payment->user()->lockForUpdate()->firstOrFail();
 
             if ($payment->product_type === ProductCatalog::SESSION_PACK) {
-                $user->increment(
-                    'session_credits',
-                    (int) ($payment->metadata['credits'] ?? ProductCatalog::SESSION_PACK_CREDITS),
-                );
+                app(SessionCreditService::class)->grantPurchase($user, $payment);
             }
 
             if ($payment->product_type === ProductCatalog::MEMBERSHIP) {

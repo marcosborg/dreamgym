@@ -26,11 +26,13 @@ class BookingCreditService
             if ($booking->paid_with === Booking::PAID_WITH_PAYMENT && $booking->price_cents > 0) {
                 return;
             }
+            $creditLotId = null;
+            $credits = app(SessionCreditService::class);
             if ($user->hasActiveMembership() && $booking->starts_at->lessThan($user->membership_expires_at)) {
                 $user->decrement('membership_credits');
                 $method = Booking::PAID_WITH_MEMBERSHIP;
-            } elseif ($user->session_credits > 0) {
-                $user->decrement('session_credits');
+            } elseif ($credits->availableFor($user, $booking->starts_at) > 0) {
+                $creditLotId = $credits->consume($user, $booking->starts_at);
                 $method = Booking::PAID_WITH_CREDITS;
             } else {
                 if (in_array($booking->paid_with, [Booking::PAID_WITH_MEMBERSHIP, Booking::PAID_WITH_CREDITS], true)) {
@@ -39,7 +41,7 @@ class BookingCreditService
 
                 return;
             }
-            $booking->updateQuietly(['paid_with' => $method, 'price_cents' => 0, 'payment_status' => 'paid']);
+            $booking->updateQuietly(['session_credit_lot_id' => $creditLotId, 'paid_with' => $method, 'price_cents' => 0, 'payment_status' => 'paid']);
         });
     }
 }

@@ -1,6 +1,13 @@
 <?php
 
 return [
+    'no_valid_session_credits' => 'Não existem créditos de sessões válidos para este horário.',
+    'credits_date_unavailable' => ':count créditos anteriores: validade por confirmar.',
+    'session_credit_validity' => 'Validade das sessões/packs',
+    'session_credit_duration' => '90 dias por compra',
+    'membership_duration' => '30 dias por mensalidade',
+    'credits_expiry' => ':count crédito válido até :date|:count créditos válidos até :date',
+
     'age_authorization_acceptance' => 'Confirmo que tenho pelo menos 16 anos e, caso tenha 16 ou 17 anos, tenho autorização do meu representante legal.',
     'age_authorization_required' => 'Para continuar, confirma que tens pelo menos 16 anos e, se tens 16 ou 17 anos, autorização do teu representante legal.',
     'booking_number' => 'Reserva',

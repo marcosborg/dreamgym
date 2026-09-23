@@ -10,18 +10,42 @@
             <div class="mt-4 rounded border border-green-200 bg-green-50 p-4 text-sm text-green-800">{{ session('status') }}</div>
         @endif
 
-        <div class="mt-8 grid gap-4 md:grid-cols-3">
+        <div class="mt-8 grid gap-4 md:grid-cols-2">
             <div class="dark-panel border-[var(--brand-blue)] p-6">
-                <div class="text-sm text-neutral-500">{{ __('site.session_credits') }}</div>
-                <div class="mt-2 text-3xl font-black">{{ auth()->user()->session_credits }}</div>
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <div class="text-sm text-neutral-400">{{ __('site.session_credits') }}</div>
+                        <div class="mt-2 text-3xl font-black">{{ auth()->user()->session_credits }}</div>
+                    </div>
+                    <div class="border-l border-[var(--brand-stone)] pl-4 text-right">
+                        <div class="text-sm text-neutral-400">{{ __('site.session_credit_validity') }}</div>
+                        <div class="mt-1 font-bold">{{ ! empty($sessionCreditValidity) ? $sessionCreditValidity[0]['expires_at']->format('d/m/Y') : '—' }}</div>
+                        <div class="mt-1 text-xs text-neutral-400">{{ __('site.session_credit_duration') }}</div>
+                    </div>
+                </div>
+                @if ($undatedSessionCredits > 0)
+                    <p class="mt-4 text-sm text-neutral-400">{{ __('site.credits_date_unavailable', ['count' => $undatedSessionCredits]) }}</p>
+                @endif
+                @if (! empty($sessionCreditValidity))
+                    <div class="mt-4 border-t border-[var(--brand-stone)] pt-3 text-sm">
+                        @foreach ($sessionCreditValidity as $validity)
+                            <p>{{ trans_choice('site.credits_expiry', $validity['credits'], ['count' => $validity['credits'], 'date' => $validity['expires_at']->format('d/m/Y')]) }}</p>
+                        @endforeach
+                    </div>
+                @endif
             </div>
             <div class="dark-panel p-6">
-                <div class="text-sm text-neutral-500">{{ __('site.membership_credits') }}</div>
-                <div class="mt-2 text-3xl font-black">{{ auth()->user()->hasActiveMembership() ? auth()->user()->membership_credits : 0 }}</div>
-            </div>
-            <div class="dark-panel p-6">
-                <div class="text-sm text-neutral-500">{{ __('site.membership_valid_until') }}</div>
-                <div class="mt-2 text-xl font-black">{{ auth()->user()->hasActiveMembership() ? auth()->user()->membership_expires_at->format('d/m/Y') : __('site.inactive') }}</div>
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <div class="text-sm text-neutral-400">{{ __('site.membership_credits') }}</div>
+                        <div class="mt-2 text-3xl font-black">{{ auth()->user()->hasActiveMembership() ? auth()->user()->membership_credits : 0 }}</div>
+                    </div>
+                    <div class="border-l border-[var(--brand-stone)] pl-4 text-right">
+                        <div class="text-sm text-neutral-400">{{ __('site.membership_valid_until') }}</div>
+                        <div class="mt-1 font-bold">{{ auth()->user()->membership_expires_at?->format('d/m/Y') ?? '—' }}</div>
+                        <div class="mt-1 text-xs text-neutral-400">{{ __('site.membership_duration') }}</div>
+                    </div>
+                </div>
             </div>
         </div>
 

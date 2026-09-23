@@ -1,6 +1,13 @@
 <?php
 
 return [
+    'no_valid_session_credits' => 'No session credits are valid for this time.',
+    'credits_date_unavailable' => ':count previous credits: expiry date to be confirmed.',
+    'session_credit_validity' => 'Session/pack validity',
+    'session_credit_duration' => '90 days per purchase',
+    'membership_duration' => '30 days per membership',
+    'credits_expiry' => ':count credit valid until :date|:count credits valid until :date',
+
     'age_authorization_acceptance' => 'I confirm that I am at least 16 years old and, if I am 16 or 17, I have permission from my legal guardian.',
     'age_authorization_required' => 'To continue, confirm that you are at least 16 and, if you are 16 or 17, have permission from your legal guardian.',
     'booking_number' => 'Booking',

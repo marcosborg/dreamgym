@@ -29,3 +29,13 @@ cd /home4/dreamgym/public_html && /usr/local/bin/php artisan payments:sync >> st
 ```
 
 Consulta apenas pedidos existentes na API autenticada da ifthenpay; não inicia cobranças. Confirma reservas e compras de forma idempotente, incluindo tentativas anteriores. Processa pendentes dos últimos sete dias; para um pagamento mais antigo, usar `payments:sync --payment=ID`. Multibanco continua a depender do callback autenticado. Pagamentos tardios sem vaga continuam a exigir revisão. O cron `ttlock:sync` também deve executar a cada minuto.
+
+Créditos de sessões/packs: cada compra paga cria um lote válido por 90 dias, consumido por ordem de expiração. A reserva deve começar antes da expiração. Cancelamentos elegíveis devolvem o crédito ao lote original, sem prolongar a data; uma sessão avulsa paga e cancelada devolve um crédito com 90 dias a contar do pagamento. Créditos administrativos antigos sem origem comprovável mantêm-se assinalados com validade por confirmar. A auditoria de 23/09/2026 encontrou zero packs pagos e zero saldos de sessões anteriores em produção.
+
+Executar também a cada minuto (a consulta/reserva já elimina créditos expirados imediatamente):
+
+```sh
+cd /home4/dreamgym/public_html && /usr/local/bin/php artisan credits:expire >> storage/logs/credits-expire.log 2>&1
+```
+
+Na conta, confirmar datas distintas para dois packs adquiridos em dias diferentes, e a validade da mensalidade no respetivo cartão. Uma compra nova não prolonga lotes existentes. Em rollback, preservar tabelas e referências dos lotes; versões anteriores não respeitam a expiração.

@@ -47,7 +47,7 @@ class ProductForm
                     ->numeric(),
                 TextInput::make('days')
                     ->label('Dias de validade')
-                    ->helperText('Pode ser definido em qualquer produto para referência administrativa. Nesta fase não altera a expiração funcional de créditos ou reservas.')
+                    ->helperText('Sessões e packs: validade fixa de 90 dias por compra. Nas mensalidades, define a duração do período comprado.')
                     ->numeric(),
                 TextInput::make('seats')
                     ->label('Lugares')

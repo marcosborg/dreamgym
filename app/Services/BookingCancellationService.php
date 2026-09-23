@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Booking;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class BookingCancellationService
@@ -22,11 +23,14 @@ class BookingCancellationService
             }
 
             if ($this->shouldReturnCredit($booking)) {
-                $creditField = $booking->paid_with === Booking::PAID_WITH_MEMBERSHIP
-                    ? 'membership_credits'
-                    : 'session_credits';
-
-                $booking->user?->increment($creditField);
+                $user = User::lockForUpdate()->find($booking->user_id);
+                if ($user) {
+                    if ($booking->paid_with === Booking::PAID_WITH_MEMBERSHIP) {
+                        $user->increment('membership_credits');
+                    } else {
+                        app(SessionCreditService::class)->refund($user, $booking);
+                    }
+                }
             }
 
             $booking->update([

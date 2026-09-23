@@ -11,9 +11,11 @@ use App\Models\OpeningHour;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Room;
+use App\Models\SessionCreditLot;
 use App\Models\User;
 use App\Services\AvailabilityService;
 use App\Services\Locks\LockProvider;
+use App\Services\SandboxPaymentService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -78,6 +80,32 @@ class BookingFlowTest extends TestCase
         ])->assertRedirect(route('purchase.confirmed', $payment));
         $this->assertNotEmpty($payment->fresh()->metadata['age_authorization_accepted_at']);
         $this->assertSame('minimum_16_guardian_under_18', $payment->fresh()->metadata['age_authorization_policy']);
+        $this->assertSame(6, $user->fresh()->session_credits);
+    }
+
+    public function test_pack_booking_keeps_the_original_credit_lot_for_cancellation(): void
+    {
+        Mail::fake();
+        $room = $this->roomWithHours();
+        $user = User::factory()->create(['session_credits' => 0]);
+        $payment = Payment::create([
+            'user_id' => $user->id, 'provider' => 'sandbox_mbway_placeholder', 'reference' => 'LOT-BOOKING',
+            'product_type' => 'session_pack', 'amount_cents' => 3600, 'currency' => 'EUR',
+            'status' => 'pending', 'metadata' => ['credits' => 6],
+        ]);
+        app(SandboxPaymentService::class)->completePurchase($payment);
+        $lot = SessionCreditLot::where('payment_id', $payment->id)->firstOrFail();
+        $this->actingAs($user)->post(route('bookings.store'), [
+            'age_authorization_accepted' => '1', 'terms_accepted' => '1',
+            'room_id' => $room->id, 'starts_at' => '2026-06-08 10:00:00',
+            'booking_type' => Booking::TYPE_SINGLE_HOUR, 'customer_name' => 'Test',
+            'customer_email' => 'test@example.test', 'bringing_children' => '0',
+        ])->assertSessionHasNoErrors()->assertRedirect();
+        $booking = Booking::firstOrFail();
+        $this->assertSame($lot->id, $booking->session_credit_lot_id);
+        $this->assertSame(5, $lot->fresh()->remaining_credits);
+        $this->post(route('account.bookings.cancel', $booking))->assertRedirect();
+        $this->assertSame(6, $lot->fresh()->remaining_credits);
         $this->assertSame(6, $user->fresh()->session_credits);
     }
 

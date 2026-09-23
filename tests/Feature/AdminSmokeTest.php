@@ -106,7 +106,7 @@ class AdminSmokeTest extends TestCase
         $this->actingAs($user)
             ->get('/admin/products/create')
             ->assertOk()
-            ->assertSee('Pode ser definido em qualquer produto');
+            ->assertSee('Sessões e packs: validade fixa de 90 dias por compra.');
     }
 
     public function test_customer_cannot_access_admin_dashboard(): void
