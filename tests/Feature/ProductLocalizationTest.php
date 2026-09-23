@@ -28,6 +28,18 @@ class ProductLocalizationTest extends TestCase
         $this->assertSame('Grupo à minha maneira', app(ProductCatalog::class)->groupHour($room)['name']);
     }
 
+    public function test_translation_backfill_handles_extra_spaces_and_preserves_custom_names(): void
+    {
+        $product = Product::where('type', Product::TYPE_MEMBERSHIP)->firstOrFail();
+        $product->update(['name' => 'Plano   30', 'name_en' => null]);
+        $migration = require database_path('migrations/2026_09_23_111900_translate_product_names_with_extra_spaces.php');
+        $migration->up();
+        $this->assertSame('Plan 30', $product->fresh()->name_en);
+        $product->update(['name_en' => 'My custom plan']);
+        $migration->up();
+        $this->assertSame('My custom plan', $product->fresh()->name_en);
+    }
+
     public function test_migration_translates_existing_standard_products(): void
     {
         $this->assertSame('Private group', Product::where('type', Product::TYPE_GROUP_HOUR)->firstOrFail()->name_en);
