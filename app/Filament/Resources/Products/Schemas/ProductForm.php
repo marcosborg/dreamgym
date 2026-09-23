@@ -15,8 +15,12 @@ class ProductForm
         return $schema
             ->components([
                 TextInput::make('name')
-                    ->label('Nome')
+                    ->label('Nome (português)')
                     ->required()
+                    ->maxLength(120),
+                TextInput::make('name_en')
+                    ->label('Nome (inglês)')
+                    ->helperText('Se ficar vazio, será usado o nome em português.')
                     ->maxLength(120),
                 Select::make('type')
                     ->label('Tipo')

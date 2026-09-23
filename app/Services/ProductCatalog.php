@@ -27,7 +27,7 @@ class ProductCatalog
     public function singleHour(Room $room): array
     {
         return $this->firstOfType(self::SINGLE_HOUR, $room, [
-            'name' => 'Hora individual',
+            'name' => app()->getLocale() === 'en' ? 'Individual hour' : 'Hora individual',
             'price_cents' => $room->slot_price_cents,
             'currency' => $room->currency,
             'seats' => 1,
@@ -37,7 +37,7 @@ class ProductCatalog
     public function sessionPack(Room $room): array
     {
         return $this->firstOfType(self::SESSION_PACK, $room, [
-            'name' => 'Pack 10 sessões',
+            'name' => app()->getLocale() === 'en' ? '10-session pack' : 'Pack 10 sessões',
             'price_cents' => (int) round($room->slot_price_cents * self::SESSION_PACK_CREDITS * 0.9),
             'currency' => $room->currency,
             'credits' => self::SESSION_PACK_CREDITS,
@@ -48,7 +48,7 @@ class ProductCatalog
     {
         return $this->firstOfType(self::MEMBERSHIP, $room, [
             'active' => false,
-            'name' => 'Mensalidade',
+            'name' => app()->getLocale() === 'en' ? 'Monthly membership' : 'Mensalidade',
             'price_cents' => $room->slot_price_cents * 12,
             'currency' => $room->currency,
             'days' => self::MEMBERSHIP_DAYS,
@@ -59,7 +59,7 @@ class ProductCatalog
     public function groupHour(Room $room): array
     {
         return $this->firstOfType(self::GROUP_HOUR, $room, [
-            'name' => 'Grupo privado',
+            'name' => app()->getLocale() === 'en' ? 'Private group' : 'Grupo privado',
             'price_cents' => (int) round($room->slot_price_cents * $room->capacity * 0.85),
             'currency' => $room->currency,
             'seats' => $room->capacity,
@@ -161,7 +161,7 @@ class ProductCatalog
             'id' => $product->id,
             'type' => $product->type,
             'active' => $product->is_active,
-            'name' => $product->name,
+            'name' => $product->localized_name,
             'price_cents' => $product->price_cents,
             'currency' => $product->currency ?: $room->currency,
             'credits' => $product->credits,

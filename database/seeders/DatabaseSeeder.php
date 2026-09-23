@@ -47,12 +47,12 @@ class DatabaseSeeder extends Seeder
             ->update(['sort_order' => 100]);
 
         $products = [
-            ['name' => 'Sessão Única', 'type' => Product::TYPE_SINGLE_HOUR, 'price_cents' => 800, 'sort_order' => 10, 'credits' => 1, 'days' => 60, 'seats' => 1, 'is_active' => true],
-            ['name' => 'Pack 6', 'type' => Product::TYPE_SESSION_PACK, 'price_cents' => 3600, 'sort_order' => 20, 'credits' => 6, 'days' => 60, 'seats' => 1, 'is_active' => true],
-            ['name' => 'Pack 12', 'type' => Product::TYPE_SESSION_PACK, 'price_cents' => 4800, 'sort_order' => 30, 'credits' => 12, 'days' => 60, 'seats' => 1, 'is_active' => true],
-            ['name' => 'Plano 15', 'type' => Product::TYPE_MEMBERSHIP, 'price_cents' => 4500, 'sort_order' => 50, 'credits' => 15, 'days' => 30, 'seats' => 1, 'is_active' => false],
-            ['name' => 'Plano 30', 'type' => Product::TYPE_MEMBERSHIP, 'price_cents' => 6000, 'sort_order' => 60, 'credits' => 30, 'days' => 30, 'seats' => 1, 'is_active' => true],
-            ['name' => 'Grupo Privado', 'type' => Product::TYPE_GROUP_HOUR, 'price_cents' => 2900, 'sort_order' => 100, 'credits' => 1, 'days' => 60, 'seats' => 5, 'is_active' => true],
+            ['name' => 'Sessão Única', 'name_en' => 'Single session', 'type' => Product::TYPE_SINGLE_HOUR, 'price_cents' => 800, 'sort_order' => 10, 'credits' => 1, 'days' => 60, 'seats' => 1, 'is_active' => true],
+            ['name' => 'Pack 6', 'name_en' => 'Pack 6', 'type' => Product::TYPE_SESSION_PACK, 'price_cents' => 3600, 'sort_order' => 20, 'credits' => 6, 'days' => 60, 'seats' => 1, 'is_active' => true],
+            ['name' => 'Pack 12', 'name_en' => 'Pack 12', 'type' => Product::TYPE_SESSION_PACK, 'price_cents' => 4800, 'sort_order' => 30, 'credits' => 12, 'days' => 60, 'seats' => 1, 'is_active' => true],
+            ['name' => 'Plano 15', 'name_en' => 'Plan 15', 'type' => Product::TYPE_MEMBERSHIP, 'price_cents' => 4500, 'sort_order' => 50, 'credits' => 15, 'days' => 30, 'seats' => 1, 'is_active' => false],
+            ['name' => 'Plano 30', 'name_en' => 'Plan 30', 'type' => Product::TYPE_MEMBERSHIP, 'price_cents' => 6000, 'sort_order' => 60, 'credits' => 30, 'days' => 30, 'seats' => 1, 'is_active' => true],
+            ['name' => 'Grupo Privado', 'name_en' => 'Private group', 'type' => Product::TYPE_GROUP_HOUR, 'price_cents' => 2900, 'sort_order' => 100, 'credits' => 1, 'days' => 60, 'seats' => 5, 'is_active' => true],
         ];
 
         foreach ($products as $product) {

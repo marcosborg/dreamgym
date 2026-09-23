@@ -8,12 +8,16 @@ use Illuminate\Database\Eloquent\Model;
 class Product extends Model
 {
     public const TYPE_SINGLE_HOUR = 'single_hour';
+
     public const TYPE_SESSION_PACK = 'session_pack';
+
     public const TYPE_MEMBERSHIP = 'membership';
+
     public const TYPE_GROUP_HOUR = 'group_hour';
 
     protected $fillable = [
         'name',
+        'name_en',
         'type',
         'price_cents',
         'currency',
@@ -36,6 +40,11 @@ class Product extends Model
         ];
     }
 
+    public function getLocalizedNameAttribute(): string
+    {
+        return app()->getLocale() === 'en' ? ($this->name_en ?: $this->name) : $this->name;
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
@@ -48,7 +57,7 @@ class Product extends Model
 
     public function getFormattedPriceAttribute(): string
     {
-        return number_format($this->price_cents / 100, 2, ',', ' ') . ' ' . $this->currency;
+        return number_format($this->price_cents / 100, 2, ',', ' ').' '.$this->currency;
     }
 
     public function isPurchaseProduct(): bool
