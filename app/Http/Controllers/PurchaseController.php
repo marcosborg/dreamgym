@@ -106,6 +106,7 @@ class PurchaseController extends Controller
     {
         $rules = [
             'terms_accepted' => ['accepted'],
+            'age_authorization_accepted' => ['required', 'accepted'],
         ];
 
         if ($provider->isIfthenpay()) {
@@ -113,12 +114,16 @@ class PurchaseController extends Controller
             $rules['mbway_phone'] = ['required_if:payment_method,mbway', 'nullable', 'string', 'max:30'];
         }
 
-        $data = request()->validate($rules);
+        $data = request()->validate($rules, ['age_authorization_accepted.required' => __('site.age_authorization_required'), 'age_authorization_accepted.accepted' => __('site.age_authorization_required')]);
 
         abort_unless($payment->user_id === Auth::id(), 403);
 
         $payment->update([
             'terms_accepted_at' => $payment->terms_accepted_at ?? now(),
+            'metadata' => array_merge($payment->metadata ?? [], [
+                'age_authorization_accepted_at' => $payment->metadata['age_authorization_accepted_at'] ?? now()->toIso8601String(),
+                'age_authorization_policy' => 'minimum_16_guardian_under_18',
+            ]),
         ]);
 
         if ($provider->isIfthenpay()) {

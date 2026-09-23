@@ -39,12 +39,55 @@ class BookingFlowTest extends TestCase
         parent::tearDown();
     }
 
+    public function test_age_confirmation_is_required_before_booking_or_spending_credits(): void
+    {
+        $room = $this->roomWithHours();
+        $user = User::factory()->create(['session_credits' => 2]);
+        $payload = [
+            'room_id' => $room->id, 'starts_at' => '2026-06-08 10:00:00',
+            'booking_type' => Booking::TYPE_SINGLE_HOUR, 'customer_name' => 'Test',
+            'customer_email' => 'test@example.test', 'bringing_children' => '0', 'terms_accepted' => '1',
+        ];
+        foreach ([[], ['age_authorization_accepted' => '0']] as $acceptance) {
+            $this->post(route('bookings.store'), array_merge($payload, $acceptance))
+                ->assertSessionHasErrors('age_authorization_accepted');
+            $this->actingAs($user)->post(route('bookings.store'), array_merge($payload, $acceptance))
+                ->assertSessionHasErrors('age_authorization_accepted');
+            auth()->logout();
+        }
+        $this->assertDatabaseCount('bookings', 0);
+        $this->assertSame(2, $user->fresh()->session_credits);
+    }
+
+    public function test_purchase_requires_age_confirmation_and_records_acceptance(): void
+    {
+        $user = User::factory()->create(['session_credits' => 0]);
+        $payment = Payment::create([
+            'user_id' => $user->id, 'provider' => 'sandbox_mbway_placeholder',
+            'reference' => 'AGE-TEST', 'product_type' => 'session_pack', 'amount_cents' => 3600,
+            'currency' => 'EUR', 'status' => 'pending', 'metadata' => ['credits' => 6],
+        ]);
+        foreach ([[], ['age_authorization_accepted' => '0']] as $acceptance) {
+            $this->actingAs($user)->post(route('purchase.complete', $payment), array_merge(['terms_accepted' => '1'], $acceptance))
+                ->assertSessionHasErrors('age_authorization_accepted');
+        }
+        $this->assertSame('pending', $payment->fresh()->status);
+        $this->assertSame(0, $user->fresh()->session_credits);
+        $this->actingAs($user)->post(route('purchase.complete', $payment), [
+            'terms_accepted' => '1', 'age_authorization_accepted' => '1',
+        ])->assertRedirect(route('purchase.confirmed', $payment));
+        $this->assertNotEmpty($payment->fresh()->metadata['age_authorization_accepted_at']);
+        $this->assertSame('minimum_16_guardian_under_18', $payment->fresh()->metadata['age_authorization_policy']);
+        $this->assertSame(6, $user->fresh()->session_credits);
+    }
+
     public function test_public_booking_flow_confirms_payment_generates_code_and_sends_email(): void
     {
         Mail::fake();
         $room = $this->roomWithHours();
 
         $response = $this->post(route('bookings.store'), [
+            'age_authorization_accepted' => '1',
             'room_id' => $room->id,
             'starts_at' => '2026-06-08 10:00:00',
             'booking_type' => Booking::TYPE_SINGLE_HOUR,
@@ -62,13 +105,14 @@ class BookingFlowTest extends TestCase
         $booking = Booking::firstOrFail();
         $response->assertRedirect(route('checkout.show', $booking));
         $this->assertSame('pending', $booking->status);
+        $this->assertNotNull($booking->age_authorization_accepted_at);
         $this->assertSame('2026-06-08 11:00:00', $booking->ends_at->format('Y-m-d H:i:s'));
         $this->assertSame(1200, $booking->price_cents);
         $this->assertNotNull($booking->user_id);
         $this->assertAuthenticated();
 
         $this->post(route('checkout.complete', $booking), [
-            'terms_accepted' => '1',
+            'age_authorization_accepted' => '1', 'terms_accepted' => '1',
         ])->assertRedirect(route('booking.confirmed', $booking));
 
         $booking->refresh();
@@ -117,6 +161,7 @@ class BookingFlowTest extends TestCase
         $room = $this->roomWithHours();
 
         $this->from(route('bookings.index'))->post(route('bookings.store'), [
+            'age_authorization_accepted' => '1',
             'room_id' => $room->id,
             'starts_at' => '2026-06-08 10:00:00',
             'booking_type' => Booking::TYPE_SINGLE_HOUR,
@@ -132,6 +177,7 @@ class BookingFlowTest extends TestCase
         $room = $this->roomWithHours();
 
         $this->post(route('bookings.store'), [
+            'age_authorization_accepted' => '1',
             'room_id' => $room->id,
             'starts_at' => '2026-06-08 10:00:00',
             'booking_type' => Booking::TYPE_SINGLE_HOUR,
@@ -188,12 +234,13 @@ class BookingFlowTest extends TestCase
         ]);
 
         $this->withSession(['guest_booking_ids' => [$booking->id]])->post(route('checkout.complete', $booking), [
-            'terms_accepted' => '1',
+            'age_authorization_accepted' => '1', 'terms_accepted' => '1',
         ])->assertRedirect(route('booking.confirmed', $booking));
 
         $booking->refresh();
 
         $this->assertNotNull($booking->terms_accepted_at);
+        $this->assertNotNull($booking->age_authorization_accepted_at);
         $this->assertNotNull($booking->payment->terms_accepted_at);
     }
 
@@ -215,6 +262,7 @@ class BookingFlowTest extends TestCase
         ]);
 
         $this->post(route('bookings.store'), [
+            'age_authorization_accepted' => '1',
             'room_id' => $room->id,
             'starts_at' => '2026-06-08 10:00:00',
             'booking_type' => Booking::TYPE_SINGLE_HOUR,
@@ -230,6 +278,7 @@ class BookingFlowTest extends TestCase
 
         for ($i = 1; $i <= 4; $i++) {
             $this->post(route('bookings.store'), [
+                'age_authorization_accepted' => '1',
                 'room_id' => $room->id,
                 'starts_at' => '2026-06-08 10:00:00',
                 'booking_type' => Booking::TYPE_SINGLE_HOUR,
@@ -246,6 +295,7 @@ class BookingFlowTest extends TestCase
         ));
 
         $this->post(route('bookings.store'), [
+            'age_authorization_accepted' => '1',
             'room_id' => $room->id,
             'starts_at' => '2026-06-08 10:00:00',
             'booking_type' => Booking::TYPE_SINGLE_HOUR,
@@ -260,6 +310,7 @@ class BookingFlowTest extends TestCase
         $room = $this->roomWithHours(capacity: 4);
 
         $this->post(route('bookings.store'), [
+            'age_authorization_accepted' => '1',
             'room_id' => $room->id,
             'starts_at' => '2026-06-08 10:00:00',
             'booking_type' => Booking::TYPE_GROUP_HOUR,
@@ -275,6 +326,7 @@ class BookingFlowTest extends TestCase
         $this->assertSame(10200, $booking->price_cents);
 
         $this->post(route('bookings.store'), [
+            'age_authorization_accepted' => '1',
             'room_id' => $room->id,
             'starts_at' => '2026-06-08 10:00:00',
             'booking_type' => Booking::TYPE_SINGLE_HOUR,
@@ -289,6 +341,7 @@ class BookingFlowTest extends TestCase
         $room = $this->roomWithHours(capacity: 5);
 
         $this->post(route('bookings.store'), [
+            'age_authorization_accepted' => '1',
             'room_id' => $room->id,
             'starts_at' => '2026-06-08 10:00:00',
             'booking_type' => Booking::TYPE_GROUP_HOUR,
@@ -311,6 +364,7 @@ class BookingFlowTest extends TestCase
 
         foreach (['10:00:00', '11:00:00'] as $index => $time) {
             $this->post(route('bookings.store'), [
+                'age_authorization_accepted' => '1',
                 'room_id' => $room->id,
                 'starts_at' => "2026-06-08 {$time}",
                 'booking_type' => Booking::TYPE_SINGLE_HOUR,
@@ -322,7 +376,7 @@ class BookingFlowTest extends TestCase
             $booking = Booking::query()->latest('id')->firstOrFail();
 
             $this->post(route('checkout.complete', $booking), [
-                'terms_accepted' => '1',
+                'age_authorization_accepted' => '1', 'terms_accepted' => '1',
             ])->assertRedirect(route('booking.confirmed', $booking));
         }
 
@@ -347,6 +401,7 @@ class BookingFlowTest extends TestCase
         });
 
         $this->post(route('bookings.store'), [
+            'age_authorization_accepted' => '1',
             'room_id' => $room->id,
             'starts_at' => '2026-06-08 10:00:00',
             'booking_type' => Booking::TYPE_SINGLE_HOUR,
@@ -358,7 +413,7 @@ class BookingFlowTest extends TestCase
         $booking = Booking::firstOrFail();
 
         $this->post(route('checkout.complete', $booking), [
-            'terms_accepted' => '1',
+            'age_authorization_accepted' => '1', 'terms_accepted' => '1',
         ])->assertRedirect(route('booking.confirmed', $booking));
 
         $booking->refresh();
@@ -454,13 +509,14 @@ class BookingFlowTest extends TestCase
 
         $payment = Payment::firstOrFail();
         $this->post(route('purchase.complete', $payment), [
-            'terms_accepted' => '1',
+            'age_authorization_accepted' => '1', 'terms_accepted' => '1',
         ])->assertRedirect(route('purchase.confirmed', $payment));
 
         $user = User::firstWhere('email', 'pack@example.test');
         $this->assertSame(10, $user->fresh()->session_credits);
 
         $this->post(route('bookings.store'), [
+            'age_authorization_accepted' => '1',
             'room_id' => $room->id,
             'starts_at' => '2026-06-08 10:00:00',
             'booking_type' => Booking::TYPE_SINGLE_HOUR,
@@ -535,6 +591,7 @@ class BookingFlowTest extends TestCase
         ]);
 
         $this->actingAs($user)->post(route('bookings.store'), [
+            'age_authorization_accepted' => '1',
             'room_id' => $room->id,
             'starts_at' => '2026-06-08 10:00:00',
             'booking_type' => Booking::TYPE_SINGLE_HOUR,
@@ -566,7 +623,7 @@ class BookingFlowTest extends TestCase
         ])->assertRedirect();
 
         $payment = Payment::firstOrFail();
-        $this->post(route('purchase.complete', $payment), ['terms_accepted' => '1'])
+        $this->post(route('purchase.complete', $payment), ['age_authorization_accepted' => '1', 'terms_accepted' => '1'])
             ->assertRedirect(route('purchase.confirmed', $payment));
 
         $user = User::firstWhere('email', 'plan@example.test');

@@ -115,6 +115,7 @@
                                 <span class="no-underline decoration-transparent">{{ __('site.children_responsibility_acceptance') }}</span>
                             </label>
                         </div>
+                        @include('partials.age-authorization')
                         <label class="flex items-start gap-2 text-sm font-bold">
                             <input type="checkbox" name="terms_accepted" value="1">
                             <span>{!! __('site.terms_acceptance_html', ['url' => route('legal.terms')]) !!}</span>

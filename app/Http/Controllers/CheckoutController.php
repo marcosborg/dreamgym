@@ -36,17 +36,22 @@ class CheckoutController extends Controller
             'terms_accepted' => ['accepted'],
         ];
 
+        if (! $booking->age_authorization_accepted_at) {
+            $rules['age_authorization_accepted'] = ['required', 'accepted'];
+        }
+
         if ($provider->isIfthenpay()) {
             $rules['payment_method'] = ['required', 'in:multibanco,mbway'];
             $rules['mbway_phone'] = ['required_if:payment_method,mbway', 'nullable', 'string', 'max:30'];
         }
 
-        $data = $request->validate($rules);
+        $data = $request->validate($rules, ['age_authorization_accepted.required' => __('site.age_authorization_required'), 'age_authorization_accepted.accepted' => __('site.age_authorization_required')]);
 
         abort_if($booking->status === Booking::STATUS_CANCELLED || $booking->paymentHoldExpired(), 422, __('site.payment_hold_expired'));
 
         $booking->update([
             'terms_accepted_at' => $booking->terms_accepted_at ?? now(),
+            'age_authorization_accepted_at' => $booking->age_authorization_accepted_at ?? now(),
         ]);
 
         $payment = $booking->payment ?: ($provider->isIfthenpay()

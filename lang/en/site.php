@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'age_authorization_acceptance' => 'I confirm that I am at least 16 years old and, if I am 16 or 17, I have permission from my legal guardian.',
+    'age_authorization_required' => 'To continue, confirm that you are at least 16 and, if you are 16 or 17, have permission from your legal guardian.',
     'booking_number' => 'Booking',
     'payment_hold_expired' => 'This booking has expired. Select a new slot before paying.',
     'payment_requires_review' => 'Payment received, but this booking could not be confirmed. Contact info@dreamgym.pt with your booking number to reschedule or request a refund.',

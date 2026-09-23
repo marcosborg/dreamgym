@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'age_authorization_acceptance' => 'Confirmo que tenho pelo menos 16 anos e, caso tenha 16 ou 17 anos, tenho autorização do meu representante legal.',
+    'age_authorization_required' => 'Para continuar, confirma que tens pelo menos 16 anos e, se tens 16 ou 17 anos, autorização do teu representante legal.',
     'booking_number' => 'Reserva',
     'payment_hold_expired' => 'O prazo desta reserva terminou. Escolhe um novo horário antes de pagar.',
     'payment_requires_review' => 'Recebemos o pagamento, mas não foi possível confirmar esta reserva. Contacta info@dreamgym.pt com o número da reserva para reagendamento ou reembolso.',

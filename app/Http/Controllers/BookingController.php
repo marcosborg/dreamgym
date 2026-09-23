@@ -51,7 +51,9 @@ class BookingController extends Controller
             'create_account' => ['nullable', 'boolean'],
             'password' => ['nullable', 'required_if:create_account,1', 'string', 'min:8', 'confirmed'],
             'terms_accepted' => ['sometimes', 'accepted'],
-        ]);
+            'age_authorization_accepted' => ['required', 'accepted'],
+        ], ['age_authorization_accepted.required' => __('site.age_authorization_required'),
+            'age_authorization_accepted.accepted' => __('site.age_authorization_required')]);
 
         $room = Room::query()->where('is_active', true)->findOrFail($data['room_id']);
         $startsAt = Carbon::parse($data['starts_at'], config('app.timezone'));
@@ -144,6 +146,7 @@ class BookingController extends Controller
                 'bringing_children' => (bool) $data['bringing_children'],
                 'children_responsibility_accepted_at' => (bool) $data['bringing_children'] ? now() : null,
                 'terms_accepted_at' => $request->boolean('terms_accepted') ? now() : null,
+                'age_authorization_accepted_at' => now(),
                 'starts_at' => $startsAt,
                 'ends_at' => $endsAt,
                 'status' => $status,

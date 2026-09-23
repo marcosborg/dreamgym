@@ -52,7 +52,8 @@
                     @error('payment_method')<p class="mb-4 text-sm font-bold text-red-700">{{ $message }}</p>@enderror
                     @error('mbway_phone')<p class="mb-4 text-sm font-bold text-red-700">{{ $message }}</p>@enderror
                 @endif
-                <label class="mb-5 flex items-start gap-2 text-sm font-bold">
+                @include('partials.age-authorization')
+                        <label class="mb-5 flex items-start gap-2 text-sm font-bold">
                     <input type="checkbox" name="terms_accepted" value="1" required>
                     <span>{!! __('site.terms_acceptance_html', ['url' => route('legal.terms')]) !!}</span>
                 </label>

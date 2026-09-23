@@ -93,7 +93,7 @@ class ProductionReadinessTest extends TestCase
             }
             $this->get(route('booking.confirmed', $booking))->assertForbidden()->assertDontSee($code->code);
             $this->get(route('checkout.show', $booking))->assertForbidden();
-            $this->post(route('checkout.complete', $booking), ['terms_accepted' => 1])->assertForbidden();
+            $this->post(route('checkout.complete', $booking), ['age_authorization_accepted' => 1, 'terms_accepted' => 1])->assertForbidden();
         }
         $this->actingAs($booking->user)->get(route('booking.confirmed', $booking))->assertOk()->assertSee($code->code)->assertHeader('Cache-Control', 'no-store, private');
     }
@@ -112,7 +112,7 @@ class ProductionReadinessTest extends TestCase
         $booking = $this->booking();
         $booking->forceFill(['created_at' => now()->subMinutes(16)])->save();
         $this->assertFalse(app(AvailabilityService::class)->hasConflict($booking->room, $booking->starts_at, $booking->ends_at));
-        $this->actingAs($booking->user)->post(route('checkout.complete', $booking), ['terms_accepted' => 1])->assertStatus(422);
+        $this->actingAs($booking->user)->post(route('checkout.complete', $booking), ['age_authorization_accepted' => 1, 'terms_accepted' => 1])->assertStatus(422);
         $this->get(route('checkout.show', $booking))->assertOk()->assertSee(__('site.payment_hold_expired'))->assertDontSee('action="'.route('checkout.complete', $booking).'"', false);
         $this->assertNull($booking->fresh()->accessCode);
     }
