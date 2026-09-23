@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'location_title' => 'Onde estamos',
+    'location_landmark' => '(junto à Pastelaria Andreia II)',
+    'view_google_maps' => 'Ver no Google Maps',
     'no_valid_session_credits' => 'Não existem créditos de sessões válidos para este horário.',
     'credits_date_unavailable' => ':count créditos anteriores: validade por confirmar.',
     'session_credit_validity' => 'Validade das sessões/packs',

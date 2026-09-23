@@ -143,4 +143,20 @@
             </div>
         </div>
     </section>
+    <section class="section border-t border-[var(--brand-blue)] py-10" aria-labelledby="location-heading">
+        <div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div>
+                <p class="eyebrow">{{ __('site.location_title') }}</p>
+                <h2 id="location-heading" class="mt-3 text-2xl font-black">Dream Gym Private</h2>
+            </div>
+            <address class="text-sm not-italic leading-7 text-neutral-300">
+                Estrada da Samorena 96, R/C B<br>
+                Samora Correia<br>
+                <span class="text-neutral-400">{{ __('site.location_landmark') }}</span>
+            </address>
+            <a class="btn-primary" href="https://www.google.com/maps/search/?api=1&amp;query={{ rawurlencode('Estrada da Samorena 96, Samora Correia, Portugal') }}" target="_blank" rel="noopener noreferrer">
+                {{ __('site.view_google_maps') }} <span aria-hidden="true">→</span>
+            </a>
+        </div>
+    </section>
 @endsection

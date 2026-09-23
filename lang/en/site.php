@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'location_title' => 'Find us',
+    'location_landmark' => '(next to Pastelaria Andreia II)',
+    'view_google_maps' => 'View on Google Maps',
     'no_valid_session_credits' => 'No session credits are valid for this time.',
     'credits_date_unavailable' => ':count previous credits: expiry date to be confirmed.',
     'session_credit_validity' => 'Session/pack validity',
