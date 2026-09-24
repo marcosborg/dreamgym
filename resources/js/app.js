@@ -14,11 +14,35 @@ document.addEventListener('DOMContentLoaded', () => {
         purchaseForm?.classList.remove('hidden');
     };
 
+    const slotChoices = [...document.querySelectorAll('[data-slot-choice]')];
+    const bookingSubmit = document.querySelector('[data-booking-submit]');
+    const slotSummary = document.querySelector('[data-slot-summary]');
+    const updateSlotSelection = (type = document.querySelector('[name="booking_type"]:checked')?.value) => {
+        const selected = slotChoices.filter(input => input.checked);
+        if (type === 'group_hour' && selected.length > 1) {
+            selected.slice(1).forEach(input => { input.checked = false; });
+        }
+        const count = slotChoices.filter(input => input.checked).length;
+        if (slotSummary) slotSummary.textContent = slotSummary.dataset.template.replace(':count', count);
+        if (bookingSubmit) {
+            bookingSubmit.disabled = count === 0;
+            bookingSubmit.textContent = count > 1 ? bookingSubmit.dataset.multiple : bookingSubmit.dataset.single;
+        }
+    };
+    slotChoices.forEach(input => input.addEventListener('change', () => {
+        if (document.querySelector('[name="booking_type"]:checked')?.value === 'group_hour' && input.checked) {
+            slotChoices.filter(other => other !== input).forEach(other => { other.checked = false; });
+        }
+        updateSlotSelection();
+    }));
+    updateSlotSelection();
+
     const selectBookingType = (value, shouldScroll = false) => {
         document.querySelectorAll('[data-booking-card]').forEach((card) => {
             card.classList.toggle('is-selected', card.dataset.selectBookingType === value);
         });
 
+        updateSlotSelection(value);
         showBookingFlow();
 
         if (shouldScroll) {

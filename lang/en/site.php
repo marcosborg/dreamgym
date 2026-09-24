@@ -1,6 +1,14 @@
 <?php
 
 return [
+    'multi_already_booked' => 'You already have a booking at one of the selected times. Check your account or choose other times.',
+    'multi_help' => 'Select several times on the same day, consecutive or not. Confirming them together uses 1 session or membership credit per hour. To pay for a session or book a group, select only one time.',
+    'multi_summary' => ':count time slot(s) selected',
+    'multi_submit' => 'Confirm times with credits',
+    'multi_requires_credits' => 'To book several times, sign in and use credits for an individual booking.',
+    'multi_insufficient_credits' => 'You do not have enough valid credits for all selected times. No bookings were created. Select fewer times or buy credits.',
+    'multi_confirmed' => ':count bookings confirmed. One credit was used per hour. See each booking and its access details below.',
+
     'location_title' => 'Find us',
     'location_landmark' => '(next to Pastelaria Andreia II)',
     'view_google_maps' => 'View on Google Maps',

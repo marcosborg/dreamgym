@@ -1,6 +1,14 @@
 <?php
 
 return [
+    'multi_already_booked' => 'Já tens uma reserva num dos horários selecionados. Consulta a tua conta ou seleciona outros horários.',
+    'multi_help' => 'Podes selecionar vários horários, seguidos ou não, no mesmo dia. A confirmação conjunta utiliza 1 crédito de sessão ou mensalidade por hora. Para pagar uma sessão ou reservar um grupo, seleciona apenas um horário.',
+    'multi_summary' => ':count horário(s) selecionado(s)',
+    'multi_submit' => 'Confirmar horários com créditos',
+    'multi_requires_credits' => 'Para reservar vários horários, inicia sessão e utiliza créditos numa reserva individual.',
+    'multi_insufficient_credits' => 'Não tens créditos válidos suficientes para todos os horários. Nenhuma reserva foi criada. Seleciona menos horários ou compra créditos.',
+    'multi_confirmed' => ':count reservas confirmadas. Foi descontado 1 crédito por hora. Consulta abaixo cada reserva e o respetivo acesso.',
+
     'location_title' => 'Onde estamos',
     'location_landmark' => '(junto à Pastelaria Andreia II)',
     'view_google_maps' => 'Ver no Google Maps',

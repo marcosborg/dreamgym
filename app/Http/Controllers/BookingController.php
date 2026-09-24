@@ -42,7 +42,9 @@ class BookingController extends Controller
     {
         $data = $request->validate([
             'room_id' => ['required', 'exists:rooms,id'],
-            'starts_at' => ['required', 'date'],
+            'starts_at' => ['required_without:slots', 'date', 'prohibits:slots'],
+            'slots' => ['required_without:starts_at', 'array', 'min:1', 'max:24'],
+            'slots.*' => ['required', 'date_format:Y-m-d H:i:s', 'distinct'],
             'booking_type' => ['required', 'in:single_hour,group_hour'],
             'customer_name' => ['required', 'string', 'max:120'],
             'customer_email' => ['required', 'email', 'max:160'],
@@ -57,21 +59,18 @@ class BookingController extends Controller
             'age_authorization_accepted.accepted' => __('site.age_authorization_required')]);
 
         $room = Room::query()->where('is_active', true)->findOrFail($data['room_id']);
-        $startsAt = Carbon::parse($data['starts_at'], config('app.timezone'));
-        $endsAt = $startsAt->copy()->addMinutes(AvailabilityService::SLOT_MINUTES);
+        $selectedStarts = collect($data['slots'] ?? [$data['starts_at']])
+            ->map(fn ($value) => Carbon::parse($value, config('app.timezone')))->sort()->values();
+        $multiple = $selectedStarts->count() > 1;
         $isGroup = $data['booking_type'] === Booking::TYPE_GROUP_HOUR;
         $seatsReserved = $isGroup ? $room->capacity : 1;
         $groupProduct = $catalog->groupHour($room);
 
         abort_unless(! $isGroup || $groupProduct['active'], 422, __('site.product_unavailable'));
 
-        abort_unless($availability->isAvailableRange(
-            $room,
-            $startsAt,
-            $endsAt,
-            seatsRequested: $seatsReserved,
-            requiresEmptySlot: $isGroup,
-        ), 422, __('site.slot_unavailable'));
+        if ($multiple && (! Auth::check() || $isGroup)) {
+            throw ValidationException::withMessages(['slots' => __('site.multi_requires_credits')]);
+        }
 
         $user = Auth::user()?->fresh();
 
@@ -99,75 +98,95 @@ class BookingController extends Controller
             }
         }
 
-        return DB::transaction(function () use ($request, $data, $room, $startsAt, $endsAt, $isGroup, $seatsReserved, $groupProduct, $catalog, $payments, $user) {
+        return DB::transaction(function () use ($request, $data, $room, $selectedStarts, $multiple, $isGroup, $seatsReserved, $groupProduct, $catalog, $payments, $user) {
             $room = Room::query()->lockForUpdate()->findOrFail($room->id);
-            abort_unless(app(AvailabilityService::class)->isAvailableRange(
-                $room, $startsAt, $endsAt, seatsRequested: $seatsReserved, requiresEmptySlot: $isGroup,
-            ), 422, __('site.slot_unavailable'));
             $user = $user ? User::query()->lockForUpdate()->findOrFail($user->id) : null;
-            $creditLotId = null;
-            $sessionCredits = app(SessionCreditService::class);
-            $paidWith = null;
-            $status = Booking::STATUS_PENDING;
-            $paymentStatus = 'pending';
-            $singleHourProduct = $catalog->singleHour($room);
-            $priceCents = $isGroup ? $groupProduct['price_cents'] : $singleHourProduct['price_cents'];
+            if ($multiple && Booking::where('user_id', $user->id)->where('room_id', $room->id)
+                ->where('status', Booking::STATUS_CONFIRMED)->whereIn('starts_at', $selectedStarts)->exists()) {
+                throw ValidationException::withMessages(['slots' => __('site.multi_already_booked')]);
+            }
+            $bookings = collect();
+            foreach ($selectedStarts as $startsAt) {
+                $endsAt = $startsAt->copy()->addMinutes(AvailabilityService::SLOT_MINUTES);
+                abort_unless(app(AvailabilityService::class)->isAvailableRange(
+                    $room, $startsAt, $endsAt, seatsRequested: $seatsReserved, requiresEmptySlot: $isGroup,
+                ), 422, __('site.slot_unavailable'));
+                $creditLotId = null;
+                $sessionCredits = app(SessionCreditService::class);
+                $paidWith = null;
+                $status = Booking::STATUS_PENDING;
+                $paymentStatus = 'pending';
+                $singleHourProduct = $catalog->singleHour($room);
+                $priceCents = $isGroup ? $groupProduct['price_cents'] : $singleHourProduct['price_cents'];
 
-            if (! $isGroup && $user?->hasActiveMembership() && $startsAt->lessThan($user->membership_expires_at)) {
-                $request->validate([
-                    'terms_accepted' => ['accepted'],
+                if (! $isGroup && $user?->hasActiveMembership() && $startsAt->lessThan($user->membership_expires_at)) {
+                    $request->validate([
+                        'terms_accepted' => ['accepted'],
+                    ]);
+
+                    $user->decrement('membership_credits');
+                    $paidWith = Booking::PAID_WITH_MEMBERSHIP;
+                    $status = Booking::STATUS_CONFIRMED;
+                    $paymentStatus = 'paid';
+                    $priceCents = 0;
+                } elseif (! $isGroup && $user && $sessionCredits->availableFor($user, $startsAt) > 0) {
+                    $request->validate([
+                        'terms_accepted' => ['accepted'],
+                    ]);
+
+                    $creditLotId = $sessionCredits->consume($user, $startsAt);
+                    $paidWith = Booking::PAID_WITH_CREDITS;
+                    $status = Booking::STATUS_CONFIRMED;
+                    $paymentStatus = 'paid';
+                    $priceCents = 0;
+                } else {
+                    if ($multiple) {
+                        throw ValidationException::withMessages(['slots' => __('site.multi_insufficient_credits')]);
+                    }
+                    $paidWith = Booking::PAID_WITH_PAYMENT;
+                }
+
+                $booking = Booking::create([
+                    'room_id' => $room->id,
+                    'user_id' => $user?->id,
+                    'session_credit_lot_id' => $creditLotId,
+                    'booking_type' => $data['booking_type'],
+                    'seats_reserved' => $seatsReserved,
+                    'customer_name' => $data['customer_name'],
+                    'customer_email' => $data['customer_email'],
+                    'customer_phone' => $data['customer_phone'] ?? null,
+                    'locale' => app()->getLocale(),
+                    'bringing_children' => (bool) $data['bringing_children'],
+                    'children_responsibility_accepted_at' => (bool) $data['bringing_children'] ? now() : null,
+                    'terms_accepted_at' => $request->boolean('terms_accepted') ? now() : null,
+                    'age_authorization_accepted_at' => now(),
+                    'starts_at' => $startsAt,
+                    'ends_at' => $endsAt,
+                    'status' => $status,
+                    'payment_status' => $paymentStatus,
+                    'paid_with' => $paidWith,
+                    'price_cents' => $priceCents,
+                    'currency' => $room->currency,
+                    'payment_expires_at' => $status === Booking::STATUS_PENDING ? now()->addMinutes(15)->min($startsAt) : null,
                 ]);
 
-                $user->decrement('membership_credits');
-                $paidWith = Booking::PAID_WITH_MEMBERSHIP;
-                $status = Booking::STATUS_CONFIRMED;
-                $paymentStatus = 'paid';
-                $priceCents = 0;
-            } elseif (! $isGroup && $user && $sessionCredits->availableFor($user, $startsAt) > 0) {
-                $request->validate([
-                    'terms_accepted' => ['accepted'],
-                ]);
-
-                $creditLotId = $sessionCredits->consume($user, $startsAt);
-                $paidWith = Booking::PAID_WITH_CREDITS;
-                $status = Booking::STATUS_CONFIRMED;
-                $paymentStatus = 'paid';
-                $priceCents = 0;
-            } else {
-                $paidWith = Booking::PAID_WITH_PAYMENT;
+                $bookings->push($booking);
             }
 
-            $booking = Booking::create([
-                'room_id' => $room->id,
-                'user_id' => $user?->id,
-                'session_credit_lot_id' => $creditLotId,
-                'booking_type' => $data['booking_type'],
-                'seats_reserved' => $seatsReserved,
-                'customer_name' => $data['customer_name'],
-                'customer_email' => $data['customer_email'],
-                'customer_phone' => $data['customer_phone'] ?? null,
-                'locale' => app()->getLocale(),
-                'bringing_children' => (bool) $data['bringing_children'],
-                'children_responsibility_accepted_at' => (bool) $data['bringing_children'] ? now() : null,
-                'terms_accepted_at' => $request->boolean('terms_accepted') ? now() : null,
-                'age_authorization_accepted_at' => now(),
-                'starts_at' => $startsAt,
-                'ends_at' => $endsAt,
-                'status' => $status,
-                'payment_status' => $paymentStatus,
-                'paid_with' => $paidWith,
-                'price_cents' => $priceCents,
-                'currency' => $room->currency,
-                'payment_expires_at' => $status === Booking::STATUS_PENDING ? now()->addMinutes(15)->min($startsAt) : null,
-            ]);
-
-            if (! $user) {
-                $request->session()->push('guest_booking_ids', $booking->id);
+            // All slots and credits must succeed before provisioning any access or sending mail.
+            foreach ($bookings as $booking) {
+                if (! $user) {
+                    $request->session()->push('guest_booking_ids', $booking->id);
+                }
+                if ($booking->payment_status === 'paid') {
+                    $payments->confirmCoveredBooking($booking);
+                }
             }
-
+            if ($multiple) {
+                return redirect()->route('account.dashboard')->with('status', __('site.multi_confirmed', ['count' => $bookings->count()]));
+            }
+            $booking = $bookings->first();
             if ($booking->payment_status === 'paid') {
-                $payments->confirmCoveredBooking($booking);
-
                 return redirect()->route('booking.confirmed', $booking);
             }
 

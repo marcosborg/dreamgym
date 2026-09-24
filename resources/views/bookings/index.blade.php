@@ -50,10 +50,11 @@
             <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_420px]">
                 <div>
                     <h2 class="mb-4 text-xl font-bold">{{ __('site.available_hours') }}</h2>
+                    @auth<p class="mb-4 text-sm text-neutral-300">{{ __('site.multi_help') }}</p>@endauth
                     <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
                         @foreach ($slots as $slot)
                             <label class="block">
-                                <input form="booking-form" type="radio" name="starts_at" value="{{ $slot['starts_at']->toDateTimeString() }}" class="peer sr-only" @disabled(! $slot['available']) required>
+                                <input form="booking-form" type="{{ auth()->check() ? 'checkbox' : 'radio' }}" name="{{ auth()->check() ? 'slots[]' : 'starts_at' }}" data-slot-choice value="{{ $slot['starts_at']->toDateTimeString() }}" class="peer sr-only" @disabled(! $slot['available']) @required(! auth()->check()) @checked(in_array($slot['starts_at']->toDateTimeString(), (array) old('slots', [old('starts_at')])))>
                                 <span class="slot-choice block rounded-lg border p-4 text-center font-bold {{ $slot['available'] ? 'cursor-pointer border-[var(--brand-stone)] bg-white' : 'border-neutral-200 bg-neutral-100 text-neutral-400' }}">
                                     <i class="option-marker" aria-hidden="true"></i>
                                     {{ $slot['starts_at']->format('H:i') }}
@@ -73,6 +74,7 @@
                     @csrf
                     <input type="hidden" name="room_id" value="{{ $room->id }}">
                     <h2 class="text-xl font-black">{{ __('site.your_details') }}</h2>
+                    <p class="mt-3 text-sm font-bold" data-slot-summary data-template="{{ __('site.multi_summary') }}" aria-live="polite"></p>
                     <div class="mt-5 space-y-4">
                         <p class="rounded bg-[var(--brand-cream)] p-3 text-sm font-semibold">{{ __('site.fixed_duration') }}</p>
                         <fieldset>
@@ -93,9 +95,9 @@
                                 @endif
                             </div>
                         </fieldset>
-                        <label class="block text-sm font-bold">{{ __('site.name') }}<input name="customer_name" class="field mt-1" required></label>
-                        <label class="block text-sm font-bold">{{ __('site.email') }}<input name="customer_email" type="email" class="field mt-1" required></label>
-                        <label class="block text-sm font-bold">{{ __('site.phone') }}<input name="customer_phone" class="field mt-1"></label>
+                        <label class="block text-sm font-bold">{{ __('site.name') }}<input name="customer_name" value="{{ old('customer_name', auth()->user()?->name) }}" class="field mt-1" required></label>
+                        <label class="block text-sm font-bold">{{ __('site.email') }}<input name="customer_email" value="{{ old('customer_email', auth()->user()?->email) }}" type="email" class="field mt-1" required></label>
+                        <label class="block text-sm font-bold">{{ __('site.phone') }}<input name="customer_phone" value="{{ old('customer_phone', auth()->user()?->phone) }}" class="field mt-1"></label>
                         <fieldset>
                             <legend class="text-sm font-bold">{{ __('site.bringing_children_question') }}</legend>
                             <div class="mt-2 flex gap-4 text-sm font-semibold">
@@ -133,7 +135,7 @@
                             <p class="rounded bg-[var(--brand-cream)] p-3 text-sm">{{ __('site.booking_will_attach') }}</p>
                         @endguest
                     </div>
-                    <button class="btn-primary mt-6 w-full" type="submit">{{ __('site.continue_payment') }}</button>
+                    <button class="btn-primary mt-6 w-full" type="submit" data-booking-submit data-single="{{ __('site.continue_payment') }}" data-multiple="{{ __('site.multi_submit') }}">{{ __('site.continue_payment') }}</button>
                 </form>
             </div>
         </div>

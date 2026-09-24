@@ -39,3 +39,11 @@ cd /home4/dreamgym/public_html && /usr/local/bin/php artisan credits:expire >> s
 ```
 
 Na conta, confirmar datas distintas para dois packs adquiridos em dias diferentes, e a validade da mensalidade no respetivo cartão. Uma compra nova não prolonga lotes existentes. Em rollback, preservar tabelas e referências dos lotes; versões anteriores não respeitam a expiração.
+
+### Seleção de vários horários com créditos
+
+- Iniciar sessão e selecionar várias horas do mesmo dia (seguidas ou não).
+- Confirmar com saldo de packs/mensalidade válido para todas as horas: é criada uma reserva de uma hora por seleção, com o respetivo acesso e email.
+- Sem créditos suficientes ou com uma hora indisponível, nenhuma das reservas é criada e nenhum crédito é descontado.
+- Reenviar a mesma seleção não deve duplicar reservas confirmadas nem descontar créditos novamente.
+- Pagamento avulso e grupos mantêm a seleção de apenas uma hora.
