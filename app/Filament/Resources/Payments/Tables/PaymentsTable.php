@@ -20,6 +20,7 @@ class PaymentsTable
         return $table
             ->columns([
                 TextColumn::make('reference')->searchable(),
+                TextColumn::make('billing_nif')->label('NIF')->searchable()->placeholder('—'),
                 TextColumn::make('booking.customer_name')->label('Customer')->searchable(),
                 TextColumn::make('user.name')->label('User')->searchable(),
                 TextColumn::make('product_type')->badge(),

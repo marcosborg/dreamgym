@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'billing_nif' => 'Tax number for invoicing (optional)',
+    'billing_nif_help' => 'Enter a Portuguese tax number with 9 digits, without spaces.',
     'multi_already_booked' => 'You already have a booking at one of the selected times. Check your account or choose other times.',
     'multi_help' => 'Select several times on the same day, consecutive or not. Confirming them together uses 1 session or membership credit per hour. To pay for a session or book a group, select only one time.',
     'multi_summary' => ':count time slot(s) selected',
@@ -185,7 +187,7 @@ return [
     'cancellation_policy_short' => 'Cancellations up to 12 hours before return the credit; after that deadline the session is lost.',
     'cancel_booking' => 'Cancel',
     'booking_cancelled' => 'Booking cancelled.',
-    'access_code_unique_per_booking' => 'This code is unique to this booking and only works within the time window shown.',
+    'access_code_unique_per_booking' => 'Enter the full code, including the # at the end. This code is unique to this booking and only works within the time window shown.',
     'up_to_people' => 'Up to :count people',
     'group_capacity' => 'Group capacity',
     'multibanco_reference' => 'Multibanco reference',

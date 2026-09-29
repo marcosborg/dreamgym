@@ -33,6 +33,7 @@ class PaymentForm
                     ->helperText('Preencher para mensalidades (normalmente 30).'),
                 TextInput::make('provider')->required(),
                 TextInput::make('reference')->required(),
+                TextInput::make('billing_nif')->label('NIF para faturação')->maxLength(9)->rules(['nullable', 'regex:/^[0-9]{9}$/']),
                 TextInput::make('amount_cents')->numeric()->required(),
                 TextInput::make('currency')->required()->maxLength(3),
                 Select::make('status')

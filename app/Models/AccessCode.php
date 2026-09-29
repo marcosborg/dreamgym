@@ -44,6 +44,11 @@ class AccessCode extends Model
         ];
     }
 
+    public function getDisplayCodeAttribute(): string
+    {
+        return rtrim((string) $this->code, '#').'#';
+    }
+
     public function getReadyForUseAttribute(): bool
     {
         return ! $this->revoked_at && $this->provision_status === self::PROVISIONED

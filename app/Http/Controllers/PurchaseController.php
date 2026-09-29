@@ -106,6 +106,7 @@ class PurchaseController extends Controller
     {
         $rules = [
             'terms_accepted' => ['accepted'],
+            'billing_nif' => ['nullable', 'string', 'regex:/^[0-9]{9}$/'],
             'age_authorization_accepted' => ['required', 'accepted'],
         ];
 
@@ -120,6 +121,7 @@ class PurchaseController extends Controller
 
         $payment->update([
             'terms_accepted_at' => $payment->terms_accepted_at ?? now(),
+            'billing_nif' => $payment->status === 'paid' ? $payment->billing_nif : ($data['billing_nif'] ?? null),
             'metadata' => array_merge($payment->metadata ?? [], [
                 'age_authorization_accepted_at' => $payment->metadata['age_authorization_accepted_at'] ?? now()->toIso8601String(),
                 'age_authorization_policy' => 'minimum_16_guardian_under_18',

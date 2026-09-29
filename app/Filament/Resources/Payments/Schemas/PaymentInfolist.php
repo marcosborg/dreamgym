@@ -12,6 +12,7 @@ class PaymentInfolist
         return $schema
             ->components([
                 TextEntry::make('reference'),
+                TextEntry::make('billing_nif')->label('NIF para faturação')->placeholder('—'),
                 TextEntry::make('booking.customer_name'),
                 TextEntry::make('amount_cents')->money('EUR', divideBy: 100),
                 TextEntry::make('status')->badge(),

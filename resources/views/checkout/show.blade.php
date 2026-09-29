@@ -41,6 +41,7 @@
             @if ($booking->status === 'pending' && ! $booking->paymentHoldExpired() && (empty($payment->metadata['ifthenpay']['transactionId']) || (($payment->metadata['payment_method'] ?? '') === 'mbway' && ! empty($payment->metadata['ifthenpay']['expireDate']) && \Carbon\Carbon::parse($payment->metadata['ifthenpay']['expireDate'])->isPast())))
             <form method="POST" action="{{ route('checkout.complete', $booking) }}" class="mt-8">
                 @csrf
+                @include('partials.billing-nif')
                 @if ($paymentProvider === 'ifthenpay')
                     <div class="mb-5 grid gap-3 sm:grid-cols-2">
                         <label class="rounded border border-[var(--brand-stone)] p-4 font-bold">

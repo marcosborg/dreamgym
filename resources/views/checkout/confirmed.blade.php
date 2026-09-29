@@ -8,7 +8,7 @@
             <div class="mt-8 rounded-lg bg-[var(--brand-blue)] p-6 text-white">
                 <div class="text-sm text-white/80">{{ __('site.access_code') }}</div>
                 @if ($booking->accessCode?->ready_for_use)
-                <div class="mt-2 text-5xl font-black tracking-[.2em]">{{ $booking->accessCode?->code }}</div>
+                <div class="mt-2 text-5xl font-black tracking-[.2em]">{{ $booking->accessCode?->display_code }}</div>
                 <div class="mt-4 text-sm">{{ __('site.validity') }}: {{ $booking->accessCode?->valid_from->format('H:i') }} - {{ $booking->accessCode?->valid_until->format('H:i') }}</div>
                 <div class="mt-2 text-sm text-white/85">{{ __('site.access_code_unique_per_booking') }}</div>
                 @else

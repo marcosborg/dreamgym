@@ -14,6 +14,7 @@ class Payment extends Model
         'provider',
         'reference',
         'amount_cents',
+        'billing_nif',
         'currency',
         'status',
         'metadata',

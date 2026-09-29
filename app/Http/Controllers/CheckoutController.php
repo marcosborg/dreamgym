@@ -34,6 +34,7 @@ class CheckoutController extends Controller
     {
         $rules = [
             'terms_accepted' => ['accepted'],
+            'billing_nif' => ['nullable', 'string', 'regex:/^[0-9]{9}$/'],
         ];
 
         if (! $booking->age_authorization_accepted_at) {
@@ -59,6 +60,7 @@ class CheckoutController extends Controller
             : $payments->createPayment($booking));
         $payment->update([
             'terms_accepted_at' => $payment->terms_accepted_at ?? now(),
+            'billing_nif' => $payment->status === 'paid' ? $payment->billing_nif : ($data['billing_nif'] ?? null),
         ]);
 
         if ($provider->isIfthenpay()) {

@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'billing_nif' => 'NIF para faturação (opcional)',
+    'billing_nif_help' => 'Introduz 9 dígitos, sem espaços.',
     'multi_already_booked' => 'Já tens uma reserva num dos horários selecionados. Consulta a tua conta ou seleciona outros horários.',
     'multi_help' => 'Podes selecionar vários horários, seguidos ou não, no mesmo dia. A confirmação conjunta utiliza 1 crédito de sessão ou mensalidade por hora. Para pagar uma sessão ou reservar um grupo, seleciona apenas um horário.',
     'multi_summary' => ':count horário(s) selecionado(s)',
@@ -185,7 +187,7 @@ return [
     'cancellation_policy_short' => 'Cancelamentos até 12 horas antes devolvem o crédito; depois desse prazo a sessão é perdida.',
     'cancel_booking' => 'Cancelar',
     'booking_cancelled' => 'Reserva cancelada.',
-    'access_code_unique_per_booking' => 'Este código é único para esta reserva e só funciona dentro da janela horária indicada.',
+    'access_code_unique_per_booking' => 'Introduz o código completo, incluindo o # no final. Este código é único para esta reserva e só funciona dentro da janela horária indicada.',
     'up_to_people' => 'Até :count pessoas',
     'group_capacity' => 'Capacidade do grupo',
     'multibanco_reference' => 'Referencia Multibanco',
