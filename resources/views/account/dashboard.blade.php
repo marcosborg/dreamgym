@@ -1,9 +1,9 @@
 @extends('layouts.public')
 
 @section('content')
-    <section class="section py-12">
+    <section class="section min-w-0 py-12">
         <p class="eyebrow">{{ __('site.my_account') }}</p>
-        <h1 class="mt-3 text-4xl font-black md:text-6xl">{{ app()->getLocale() === 'pt' ? 'Olá' : 'Hello' }}, <span class="red-word">{{ auth()->user()->name }}</span></h1>
+        <h1 class="mt-3 break-words text-4xl font-black md:text-6xl">{{ app()->getLocale() === 'pt' ? 'Olá' : 'Hello' }}, <span class="red-word">{{ auth()->user()->name }}</span></h1>
         <p class="mt-2 text-neutral-700">{{ __('site.booking_history') }}</p>
         <p class="mt-2 text-sm text-neutral-600">{{ __('site.cancellation_policy_short') }}</p>
         @if (session('status'))
@@ -67,7 +67,31 @@
             </div>
         </div>
 
-        <div class="mt-8 overflow-hidden rounded-lg border border-[var(--brand-stone)] bg-white">
+        <div class="mt-8 grid min-w-0 gap-4 lg:hidden">
+            @forelse ($bookings as $booking)
+                <article class="min-w-0 rounded-lg border border-[var(--brand-stone)] bg-white p-4">
+                    <h2 class="font-bold">{{ $booking->starts_at->format('d/m/Y') }} · {{ $booking->starts_at->format('H:i') }} - {{ $booking->ends_at->format('H:i') }}</h2>
+                    <p class="mt-1 text-xs">#{{ $booking->id }}</p>
+                    <dl class="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-x-4 gap-y-3 text-sm [&_dd]:min-w-0 [&_dd]:break-words">
+                        <dt>{{ __('site.room') }}</dt><dd>{{ $booking->room->localized_name }}</dd>
+                        <dt>Status</dt><dd>{{ $booking->status }}</dd>
+                        <dt>{{ __('site.booking_type') }}</dt><dd>{{ $booking->booking_type }}</dd>
+                        <dt>{{ __('site.access_code') }}</dt><dd class="font-bold">{{ $booking->accessCode?->ready_for_use ? $booking->accessCode->display_code : ($booking->status === 'confirmed' ? __('site.access_preparing') : '-') }}</dd>
+                        <dt>{{ __('site.price_label') }}</dt><dd>{{ $booking->formatted_price }}</dd>
+                    </dl>
+                    @if ($booking->canBeCancelledByCustomer())
+                        <form class="mt-4" method="POST" action="{{ route('account.bookings.cancel', $booking) }}">
+                            @csrf
+                            <button class="btn-secondary w-full" type="submit">{{ __('site.cancel_booking') }}</button>
+                        </form>
+                    @endif
+                </article>
+            @empty
+                <p class="rounded-lg border border-[var(--brand-stone)] bg-white p-4 text-sm text-neutral-600">{{ __('site.no_bookings') }}</p>
+            @endforelse
+        </div>
+
+        <div class="mt-8 hidden overflow-x-auto rounded-lg border border-[var(--brand-stone)] bg-white lg:block">
             <table class="w-full text-left text-sm">
                 <thead class="bg-[var(--brand-cream)]">
                 <tr>
