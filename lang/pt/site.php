@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'founder_price' => 'Preço de sócio fundador · 3 dias de tolerância para renovar.',
+    'founder_checkout_expired' => 'O prazo do preço de fundador terminou. Volta à página de reservas e inicia uma nova compra ao preço atual.',
     'billing_nif' => 'NIF para faturação (opcional)',
     'billing_nif_help' => 'Introduz 9 dígitos, sem espaços.',
     'multi_already_booked' => 'Já tens uma reserva num dos horários selecionados. Consulta a tua conta ou seleciona outros horários.',

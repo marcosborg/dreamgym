@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
+use App\Services\FounderMembershipService;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
@@ -19,6 +20,10 @@ class UsersTable
                 TextColumn::make('phone')->searchable(),
                 TextColumn::make('session_credits')->label('Créditos packs')->sortable(),
                 TextColumn::make('membership_credits')->label('Créditos plano')->sortable(),
+                IconColumn::make('is_founder')->label('Fundador')->boolean(),
+                TextColumn::make('founder_discount')
+                    ->label('Preço fundador')
+                    ->getStateUsing(fn ($record) => ! $record->is_founder ? '—' : (app(FounderMembershipService::class)->eligible($record) ? '40 € · elegível' : 'Perdido por interrupção')),
                 IconColumn::make('is_admin')->label('Admin')->boolean(),
                 TextColumn::make('bookings_count')
                     ->counts('bookings')

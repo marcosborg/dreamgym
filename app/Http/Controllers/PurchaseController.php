@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Payment;
 use App\Models\Room;
 use App\Models\User;
+use App\Services\FounderMembershipService;
 use App\Services\Payments\IfthenpayPaymentService;
 use App\Services\Payments\PaymentProvider;
 use App\Services\ProductCatalog;
@@ -67,6 +68,8 @@ class PurchaseController extends Controller
 
         abort_unless($product && $product['active'], 422, __('site.product_unavailable'));
 
+        $product = app(FounderMembershipService::class)->priceFor($product, $user);
+
         $payment = $provider->isIfthenpay()
             ? $ifthenpay->createPurchasePayment($user, $product, $room)
             : Payment::create([
@@ -84,6 +87,10 @@ class PurchaseController extends Controller
                     'days' => $product['days'] ?? null,
                 ],
             ]);
+
+        if ($product['founder_price'] ?? false) {
+            $payment->update(['metadata' => array_merge($payment->metadata ?? [], ['founder_price' => true])]);
+        }
 
         return redirect()->route('purchase.checkout', $payment);
     }
@@ -118,6 +125,12 @@ class PurchaseController extends Controller
         $data = request()->validate($rules, ['age_authorization_accepted.required' => __('site.age_authorization_required'), 'age_authorization_accepted.accepted' => __('site.age_authorization_required')]);
 
         abort_unless($payment->user_id === Auth::id(), 403);
+
+        // Recheck before requesting money: an old checkout must not keep an expired discount.
+        if ($payment->status !== 'paid' && ($payment->metadata['founder_price'] ?? false)
+            && ! app(FounderMembershipService::class)->eligible($payment->user)) {
+            throw ValidationException::withMessages(['payment_method' => __('site.founder_checkout_expired')]);
+        }
 
         $payment->update([
             'terms_accepted_at' => $payment->terms_accepted_at ?? now(),

@@ -6,6 +6,7 @@ use App\Models\Booking;
 use App\Models\Room;
 use App\Models\User;
 use App\Services\AvailabilityService;
+use App\Services\FounderMembershipService;
 use App\Services\Payments\IfthenpayPaymentService;
 use App\Services\Payments\PaymentProvider;
 use App\Services\ProductCatalog;
@@ -33,7 +34,7 @@ class BookingController extends Controller
             'membership' => $catalog->membership($room),
             'group_hour' => $catalog->groupHour($room),
         ];
-        $purchaseProducts = $catalog->purchaseProducts($room);
+        $purchaseProducts = $catalog->purchaseProducts($room)->map(fn (array $product) => app(FounderMembershipService::class)->priceFor($product, $request->user()));
 
         return view('bookings.index', compact('room', 'date', 'slots', 'products', 'purchaseProducts'));
     }

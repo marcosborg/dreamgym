@@ -12,6 +12,7 @@
                 <div><dt class="text-sm text-neutral-500">{{ __('site.product') }}</dt><dd class="font-bold">{{ $payment->metadata['label'] ?? $payment->product_type }}</dd></div>
                 <div><dt class="text-sm text-neutral-500">{{ __('site.price_label') }}</dt><dd class="font-bold">{{ number_format($payment->amount_cents / 100, 2, ',', ' ') }} {{ $payment->currency }}</dd></div>
             </dl>
+            @if ($payment->metadata['founder_price'] ?? false)<p class="mt-4 text-sm font-bold">{{ __('site.founder_price') }}</p>@endif
             @if (session('status'))
                 <div class="mt-6 rounded border border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-900">{{ session('status') }}</div>
             @endif
@@ -35,6 +36,7 @@
             <form method="POST" action="{{ route('purchase.complete', $payment) }}" class="mt-8">
                 @csrf
                 @include('partials.billing-nif')
+                @error('payment_method')<p class="mb-4 text-sm font-bold text-red-700">{{ $message }}</p>@enderror
                 @if ($paymentProvider === 'ifthenpay')
                     <div class="mb-5 grid gap-3 sm:grid-cols-2">
                         <label class="rounded border border-[var(--brand-stone)] p-4 font-bold">
@@ -50,7 +52,6 @@
                         <span class="text-sm font-bold">{{ __('site.mbway_phone') }}</span>
                         <input class="mt-2 w-full rounded border border-[var(--brand-stone)] px-4 py-3" name="mbway_phone" value="{{ old('mbway_phone', $payment->user?->phone) }}" placeholder="912345678">
                     </label>
-                    @error('payment_method')<p class="mb-4 text-sm font-bold text-red-700">{{ $message }}</p>@enderror
                     @error('mbway_phone')<p class="mb-4 text-sm font-bold text-red-700">{{ $message }}</p>@enderror
                 @endif
                 @include('partials.age-authorization')

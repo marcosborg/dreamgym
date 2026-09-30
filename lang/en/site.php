@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'founder_price' => 'Founding member price · 3-day renewal grace period.',
+    'founder_checkout_expired' => 'The founding member price deadline has passed. Return to the booking page and start a new purchase at the current price.',
     'billing_nif' => 'Tax number for invoicing (optional)',
     'billing_nif_help' => 'Enter a Portuguese tax number with 9 digits, without spaces.',
     'multi_already_booked' => 'You already have a booking at one of the selected times. Check your account or choose other times.',

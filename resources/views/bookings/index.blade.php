@@ -35,6 +35,7 @@
                 >
                     <span class="option-marker" aria-hidden="true"></span>
                     <span class="block text-sm text-neutral-500">{{ $product['name'] }}</span>
+                    @if ($product['founder_price'] ?? false)<span class="block text-xs">{{ __('site.founder_price') }}</span>@endif
                     <strong class="mt-1 block text-2xl">{{ number_format($product['price_cents'] / 100, 2, ',', ' ') }} {{ $product['currency'] }}</strong>
                 </a>
             @endforeach
