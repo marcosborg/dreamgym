@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\LegalTermSection;
+use App\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -53,5 +54,33 @@ class LegalPagesTest extends TestCase
             ->assertOk()
             ->assertSee('<strong>parágrafo</strong>', false)
             ->assertSee('<ol>', false);
+    }
+
+    public function test_cookie_update_preserves_other_client_legal_sections(): void
+    {
+        $section = LegalTermSection::create([
+            'document_type' => 'privacy', 'title_pt' => '10. Cookies', 'title_en' => '10. Cookies',
+            'body_pt' => '<p>Política de Cookies separada.</p>', 'body_en' => '<p>Separate cookie policy.</p>',
+            'sort_order' => 100, 'is_active' => true,
+        ]);
+        $other = LegalTermSection::where('id', '!=', $section->id)->first();
+        $original = $other->getAttributes();
+        (require database_path('migrations/2026_10_02_093000_clarify_privacy_cookie_information.php'))->up();
+        $this->assertSame($original, $other->fresh()->getAttributes());
+        $this->get(route('legal.privacy'))->assertOk()->assertSee('dream_gym_session')->assertSee('400 dias')->assertDontSee('Política de Cookies separada.');
+        app()->setLocale('en');
+        $this->assertStringContainsString('400 days', $section->fresh()->body_en);
+    }
+
+    public function test_faq_email_is_linked_without_allowing_html_in_answers(): void
+    {
+        Setting::setValue('faq_items', [[
+            'question_pt' => 'Contacto', 'answer_pt' => '<script>alert(1)</script> info@dreamgym.pt',
+            'question_en' => 'Contact', 'answer_en' => 'Email info@dreamgym.pt',
+        ]]);
+        $this->get(route('home'))->assertOk()
+            ->assertSee('href="mailto:info@dreamgym.pt"', false)
+            ->assertSee('&lt;script&gt;alert(1)&lt;/script&gt;', false)
+            ->assertDontSee('<script>alert(1)</script>', false);
     }
 }

@@ -137,7 +137,7 @@
                 @foreach (app(\App\Services\ProductCatalog::class)->faq() as $item)
                     <div class="feature-card p-6">
                         <h3 class="font-black">{{ $item['question_'.app()->getLocale()] ?? $item['question_pt'] ?? '' }}</h3>
-                        <p class="mt-3 leading-7 text-neutral-400">{{ $item['answer_'.app()->getLocale()] ?? $item['answer_pt'] ?? '' }}</p>
+                        <p class="mt-3 leading-7 text-neutral-400">{!! str_replace('info@dreamgym.pt', '<a class="faq-email" href="mailto:info@dreamgym.pt">info@dreamgym.pt</a>', e($item['answer_'.app()->getLocale()] ?? $item['answer_pt'] ?? '')) !!}</p>
                     </div>
                 @endforeach
             </div>

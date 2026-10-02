@@ -229,3 +229,6 @@ body {
     opacity: 1;
 }
 .peer:focus-visible + .slot-choice { outline: 2px solid white; outline-offset: 4px; }
+
+/* Keep FAQ contact links consistent with the legal pages. */
+.faq-email { color: #ff6070; font-weight: 700; text-decoration: underline; overflow-wrap: anywhere; }
