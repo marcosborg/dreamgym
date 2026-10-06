@@ -117,12 +117,11 @@ class ProductionReadinessTest extends TestCase
         $this->assertNull($booking->fresh()->accessCode);
     }
 
-    public function test_payment_reference_holds_capacity_until_its_explicit_deadline(): void
+    public function test_long_payment_reference_does_not_extend_the_fifteen_minute_hold(): void
     {
         $booking = $this->booking(['payment_expires_at' => now()->addHours(3)]);
-        $booking->forceFill(['created_at' => now()->subDays(2)])->save();
         $this->assertTrue(app(AvailabilityService::class)->hasConflict($booking->room, $booking->starts_at, $booking->ends_at));
-        $this->travel(3)->hours();
+        $this->travel(15)->minutes();
         $this->assertFalse(app(AvailabilityService::class)->hasConflict($booking->room, $booking->starts_at, $booking->ends_at));
     }
 

@@ -49,6 +49,60 @@ class MultiSlotBookingTest extends TestCase
         Mail::assertSentCount(3);
     }
 
+    public function test_repeated_single_slot_only_spends_one_credit_and_sends_one_email(): void
+    {
+        $data = $this->payload();
+        $data['slots'] = [$data['slots'][0]];
+        $user = User::factory()->create(['session_credits' => 3]);
+        $this->actingAs($user);
+        for ($i = 0; $i < 3; $i++) {
+            $this->post(route('bookings.store'), $data)->assertRedirect();
+        }
+        $this->assertDatabaseCount('bookings', 1);
+        $this->assertDatabaseCount('access_codes', 1);
+        $this->assertSame(2, $user->fresh()->session_credits);
+        Mail::assertSentCount(1);
+    }
+
+    public function test_repeated_membership_and_unpaid_reservations_are_reused(): void
+    {
+        $data = $this->payload();
+        $data['slots'] = [$data['slots'][0]];
+        $user = User::factory()->create(['membership_credits' => 3, 'membership_expires_at' => now()->addMonth()]);
+        $this->actingAs($user)->post(route('bookings.store'), $data)->assertRedirect();
+        $this->post(route('bookings.store'), $data)->assertRedirect();
+        $this->assertSame(2, $user->fresh()->membership_credits);
+        $other = User::factory()->create();
+        $this->actingAs($other)->post(route('bookings.store'), $data)->assertRedirect();
+        $pending = Booking::where('user_id', $other->id)->firstOrFail();
+        $this->post(route('bookings.store'), $data)->assertRedirect(route('checkout.show', $pending));
+        $this->assertDatabaseCount('bookings', 2);
+        $this->assertDatabaseCount('payments', 1);
+        Mail::assertSentCount(1);
+    }
+
+    public function test_audited_duplicate_repair_restores_credit_once_and_keeps_original(): void
+    {
+        $data = $this->payload();
+        $data['slots'] = [$data['slots'][0]];
+        $user = User::factory()->create(['membership_credits' => 3, 'membership_expires_at' => now()->addMonth()]);
+        $this->actingAs($user)->post(route('bookings.store'), $data)->assertRedirect();
+        $original = Booking::firstOrFail();
+        $duplicate = $original->replicate();
+        $duplicate->save();
+        $user->decrement('membership_credits');
+        $this->artisan('bookings:repair-duplicates', ['--ids' => (string) $duplicate->id])->assertSuccessful();
+        $this->assertSame(1, $user->fresh()->membership_credits);
+        for ($i = 0; $i < 2; $i++) {
+            $this->artisan('bookings:repair-duplicates', ['--ids' => (string) $duplicate->id, '--apply' => true])->assertSuccessful();
+        }
+        $this->assertSame(2, $user->fresh()->membership_credits);
+        $this->assertSame('cancelled', $duplicate->fresh()->status);
+        $this->assertSame($original->id, $duplicate->fresh()->duplicate_of_id);
+        $this->assertSame('confirmed', $original->fresh()->status);
+        Mail::assertSentCount(1);
+    }
+
     public function test_members_see_multi_select_but_guests_keep_single_slot_selection(): void
     {
         $this->payload();

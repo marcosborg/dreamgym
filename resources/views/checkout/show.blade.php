@@ -1,7 +1,7 @@
 @extends('layouts.public')
 
 @section('content')
-    @if ($payment->status === 'pending' && ! $booking->paymentHoldExpired() && ! empty($payment->metadata['ifthenpay']['transactionId']))
+    @if ($booking->status === 'pending' && $payment->status === 'pending' && ! $booking->paymentHoldExpired() && ! empty($payment->metadata['ifthenpay']['transactionId']))
         <script>setTimeout(() => window.location.reload(), 10000);</script>
     @endif
     <section class="section max-w-3xl py-12">
@@ -15,6 +15,9 @@
                 <div><dt class="text-sm text-neutral-500">{{ __('site.time') }}</dt><dd class="font-bold">{{ $booking->starts_at->format('H:i') }} - {{ $booking->ends_at->format('H:i') }}</dd></div>
                 <div><dt class="text-sm text-neutral-500">{{ __('site.price_label') }}</dt><dd class="font-bold">{{ $booking->formatted_price }}</dd></div>
             </dl>
+            @if ($booking->status === 'pending' && ! $booking->paymentHoldExpired())
+                <p class="mt-4 text-sm font-bold">{{ __('site.payment_hold_deadline', ['time' => $booking->paymentDeadline()->format('H:i')]) }}</p>
+            @endif
             @if (session('status'))
                 <div class="mt-6 rounded border border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-900">{{ session('status') }}</div>
             @endif

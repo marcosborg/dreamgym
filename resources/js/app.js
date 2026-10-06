@@ -141,3 +141,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     updateChildrenResponsibility();
 });
+
+// Prevent repeated submissions while the server processes a booking.
+const bookingForm = document.getElementById('booking-form');
+if (bookingForm) {
+    let submitting = false;
+    bookingForm.addEventListener('submit', (event) => {
+        if (submitting) { event.preventDefault(); return; }
+        submitting = true;
+        bookingForm.querySelector('[type="submit"]').disabled = true;
+    });
+    window.addEventListener('pageshow', () => {
+        submitting = false;
+        bookingForm.querySelector('[type="submit"]').disabled = false;
+    });
+}
+
+const billingNif = document.querySelector('[name="billing_nif"]');
+if (billingNif) {
+    const syncBillingAddress = () => {
+        document.querySelectorAll('[data-billing-address] input').forEach((input) => {
+            input.required = billingNif.value.trim() !== '';
+        });
+    };
+    billingNif.addEventListener('input', syncBillingAddress);
+    syncBillingAddress();
+}
+
+const promotion = document.querySelector('[data-promotion]');
+if (promotion && typeof promotion.showModal === 'function') {
+    const key = `promotion-${promotion.dataset.promotionVersion}`;
+    let seen = false;
+    try { seen = sessionStorage.getItem(key) === '1'; } catch { /* Storage can be disabled. */ }
+    if (!seen) {
+        promotion.showModal();
+        try { sessionStorage.setItem(key, '1'); } catch { /* Closing still works without storage. */ }
+    }
+    promotion.addEventListener('click', (event) => {
+        if (event.target === promotion) {
+            const rect = promotion.getBoundingClientRect();
+            if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) promotion.close();
+        }
+    });
+}

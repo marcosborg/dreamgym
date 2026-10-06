@@ -137,7 +137,7 @@ class IfthenpayPaymentService
         if ($payment->booking_id) {
             $expires = $result->toArray()['expireDate'] ?? null;
             $deadline = $expires ? Carbon::parse($expires) : now()->addMinutes(15);
-            $payment->booking->update(['payment_expires_at' => $deadline->min($payment->booking->starts_at)]);
+            $payment->booking->update(['payment_expires_at' => $deadline->min($payment->booking->paymentDeadline())]);
         }
 
         return $payment->fresh(['booking', 'user']);

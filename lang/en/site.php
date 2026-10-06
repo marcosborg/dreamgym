@@ -201,4 +201,11 @@ return [
     'payment_waiting_callback' => 'Waiting for automatic confirmation from ifthenpay. Once payment is validated, the booking/purchase is confirmed.',
     'payment_pending_confirmation' => 'Payment created. Complete the payment to receive confirmation.',
     'payment_initialization_failed' => 'Could not start the payment. Check the details or try another method.',
+    'billing_address' => 'Billing address',
+    'billing_postal_code' => 'Postal code',
+    'billing_city' => 'City',
+    'billing_address_help' => 'If you enter a tax number, also provide your billing address.',
+    'promotion' => 'Promotion',
+    'close_promotion' => 'Close promotion',
+    'payment_hold_deadline' => 'Your place is held until :time. Complete payment by then; afterwards the booking is cancelled and the place is released.',
 ];

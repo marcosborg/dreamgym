@@ -102,9 +102,18 @@ class BookingController extends Controller
         return DB::transaction(function () use ($request, $data, $room, $selectedStarts, $multiple, $isGroup, $seatsReserved, $groupProduct, $catalog, $payments, $user) {
             $room = Room::query()->lockForUpdate()->findOrFail($room->id);
             $user = $user ? User::query()->lockForUpdate()->findOrFail($user->id) : null;
-            if ($multiple && Booking::where('user_id', $user->id)->where('room_id', $room->id)
-                ->where('status', Booking::STATUS_CONFIRMED)->whereIn('starts_at', $selectedStarts)->exists()) {
-                throw ValidationException::withMessages(['slots' => __('site.multi_already_booked')]);
+            // The room lock serializes competing submissions, including double clicks and retries.
+            $existing = Booking::where('room_id', $room->id)->holdingCapacity()
+                ->whereIn('starts_at', $selectedStarts)
+                ->when($user, fn ($q) => $q->where('user_id', $user->id),
+                    fn ($q) => $q->whereNull('user_id')->where('customer_email', $data['customer_email']))
+                ->first();
+            if ($existing) {
+                if ($multiple || (! $user && ! in_array($existing->id, $request->session()->get('guest_booking_ids', [])))) {
+                    throw ValidationException::withMessages(['slots' => __('site.multi_already_booked')]);
+                }
+
+                return redirect()->route($existing->status === Booking::STATUS_CONFIRMED ? 'booking.confirmed' : 'checkout.show', $existing);
             }
             $bookings = collect();
             foreach ($selectedStarts as $startsAt) {

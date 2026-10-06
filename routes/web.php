@@ -8,6 +8,7 @@ use App\Http\Controllers\IfthenpayCallbackController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\PersonalTrainerPhotoController;
 use App\Http\Controllers\PersonalTrainerSubmissionController;
+use App\Http\Controllers\PromotionImageController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Middleware\AuthorizeBookingAccess;
 use App\Models\LegalTermSection;
@@ -37,6 +38,8 @@ Route::get('/privacy', function (LegalTerms $terms) {
         'sections' => $terms->sections(LegalTermSection::DOCUMENT_PRIVACY),
     ]);
 })->name('legal.privacy');
+
+Route::get('/promotion/{filename}', PromotionImageController::class)->name('promotion.image');
 
 Route::get('/book', [BookingController::class, 'index'])->name('bookings.index');
 Route::post('/book', [BookingController::class, 'store'])->name('bookings.store');

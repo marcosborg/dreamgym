@@ -18,7 +18,7 @@ class BusinessStatsOverview extends StatsOverviewWidget
     {
         $todayBookings = Booking::query()
             ->whereDate('starts_at', today())
-            ->where('status', '!=', Booking::STATUS_CANCELLED)
+            ->holdingCapacity()
             ->count();
 
         $monthRevenue = Payment::query()
@@ -28,7 +28,7 @@ class BusinessStatsOverview extends StatsOverviewWidget
 
         $nextBooking = Booking::query()
             ->where('starts_at', '>=', now())
-            ->whereIn('status', [Booking::STATUS_PENDING, Booking::STATUS_CONFIRMED])
+            ->holdingCapacity()
             ->orderBy('starts_at')
             ->first();
 
@@ -64,7 +64,7 @@ class BusinessStatsOverview extends StatsOverviewWidget
         return collect(range(6, 0))
             ->map(fn (int $daysAgo): int => Booking::query()
                 ->whereDate('starts_at', now()->subDays($daysAgo))
-                ->where('status', '!=', Booking::STATUS_CANCELLED)
+                ->holdingCapacity()
                 ->count())
             ->all();
     }

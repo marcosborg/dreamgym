@@ -32,11 +32,16 @@ class BillingAndAccessDisplayTest extends TestCase
         $this->post(route('purchase.complete', $first), $this->input(['billing_nif' => '123456789']))->assertRedirect(route('purchase.confirmed', $first));
         $this->assertSame('123456789', $first->fresh()->billing_nif);
         $this->assertSame('paid', $first->fresh()->status);
-        $this->post(route('purchase.complete', $first), $this->input(['billing_nif' => '987654321']));
+        $this->assertSame('Porto', $first->fresh()->billing_city);
+        $this->assertSame('4000-001', $first->fresh()->billing_postal_code);
+        $this->assertSame('Rua de Teste 1', $first->fresh()->billing_address);
+        $this->post(route('purchase.complete', $first), $this->input(['billing_nif' => '987654321', 'billing_city' => 'Lisboa']));
         $this->assertSame('123456789', $first->fresh()->billing_nif);
         $second = $this->payment($user);
         $this->post(route('purchase.complete', $second), $this->input())->assertRedirect(route('purchase.confirmed', $second));
         $this->assertNull($second->fresh()->billing_nif);
+        $this->assertNull($second->fresh()->billing_address);
+        $this->assertSame('Porto', $first->fresh()->billing_city);
     }
 
     public function test_invalid_nif_and_other_users_cannot_change_payment(): void
@@ -63,6 +68,7 @@ class BillingAndAccessDisplayTest extends TestCase
         $this->actingAs($user)->get(route('checkout.show', $booking))->assertOk()->assertSee('name="billing_nif"', false);
         $this->post(route('checkout.complete', $booking), $this->input(['billing_nif' => '123456789']))->assertRedirect(route('booking.confirmed', $booking));
         $this->assertSame('123456789', $booking->payment->billing_nif);
+        $this->assertSame('Porto', $booking->payment->billing_city);
         $code = $booking->fresh()->accessCode;
         $code->update(['provision_status' => AccessCode::PROVISIONED]);
         $raw = $code->code;
@@ -73,6 +79,16 @@ class BillingAndAccessDisplayTest extends TestCase
         $this->assertStringNotContainsString('#', $raw);
     }
 
+    public function test_nif_requires_complete_billing_address(): void
+    {
+        $user = User::factory()->create();
+        $payment = $this->payment($user);
+        $this->actingAs($user)->post(route('purchase.complete', $payment), [
+            'terms_accepted' => '1', 'age_authorization_accepted' => '1', 'billing_nif' => '123456789',
+        ])->assertSessionHasErrors(['billing_address', 'billing_postal_code', 'billing_city']);
+        $this->assertSame('pending', $payment->fresh()->status);
+    }
+
     private function payment(User $user): Payment
     {
         return Payment::create(['user_id' => $user->id, 'product_type' => 'session_pack', 'provider' => 'sandbox_mbway_placeholder', 'reference' => uniqid('TEST-'), 'amount_cents' => 2000, 'currency' => 'EUR', 'status' => 'pending', 'metadata' => ['credits' => 3]]);
@@ -80,6 +96,6 @@ class BillingAndAccessDisplayTest extends TestCase
 
     private function input(array $extra = []): array
     {
-        return array_merge(['terms_accepted' => '1', 'age_authorization_accepted' => '1'], $extra);
+        return array_merge(['terms_accepted' => '1', 'age_authorization_accepted' => '1', 'billing_address' => 'Rua de Teste 1', 'billing_postal_code' => '4000-001', 'billing_city' => 'Porto'], $extra);
     }
 }

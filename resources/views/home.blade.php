@@ -1,6 +1,7 @@
 @extends('layouts.public')
 
 @section('content')
+    @include('partials.promotion')
     <section class="hero-section">
         <div class="section grid min-h-[660px] items-center gap-10 py-16 lg:grid-cols-[1.08fr_.92fr] lg:py-24">
             <div>

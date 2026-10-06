@@ -18,6 +18,7 @@ class SyncIfthenpayPayments extends Command
     public function handle(IfthenpayPaymentService $service): int
     {
         if (config('payments.provider') !== 'ifthenpay') {
+            $this->call('bookings:expire');
             $this->info('Ifthenpay inactive.');
 
             return self::SUCCESS;
@@ -40,6 +41,7 @@ class SyncIfthenpayPayments extends Command
                         $this->warn('Payment '.$payment->id.' could not be verified.');
                     }
                 });
+            $this->call('bookings:expire');
             $this->info('Reconciliation finished; failures: '.$failed);
 
             return $failed ? self::FAILURE : self::SUCCESS;

@@ -7,6 +7,7 @@ use App\Services\ProductCatalog;
 use App\Services\SiteSettings;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -42,6 +43,9 @@ class Settings extends Page
             'maintenance_allowed_ips' => implode("\n", app(SiteSettings::class)->maintenanceAllowedIps()),
             'faq_items' => app(ProductCatalog::class)->faq(),
             'equipment_groups' => app(SiteSettings::class)->equipmentGroups(),
+            'promotion_enabled' => Setting::getValue('promotion_enabled', false),
+            'promotion_image' => Setting::getValue('promotion_image'),
+            'promotion_alt' => Setting::getValue('promotion_alt', 'Promoção Dream Gym'),
         ]);
     }
 
@@ -66,6 +70,23 @@ class Settings extends Page
                             ->helperText('Um IP por linha, ou separados por vírgulas. O teu IP atual: '.(request()->ip() ?? 'indisponível'))
                             ->rows(5)
                             ->columnSpanFull(),
+                    ]),
+                Section::make('Pop-up promocional')
+                    ->description('Imagem apresentada ao entrar na página inicial, uma vez por visita. Podes trocar a imagem ou desativar a promoção.')
+                    ->schema([
+                        Toggle::make('promotion_enabled')->label('Mostrar promoção')->live(),
+                        FileUpload::make('promotion_image')->label('Imagem da promoção')->disk('public')
+                            ->directory('promotions')->image()->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                            ->maxSize(5120)->requiredIf('promotion_enabled', true)
+                            ->getUploadedFileUsing(function (FileUpload $component, string $file): ?array {
+                                $info = $component->getUploadedFile($file, null);
+                                if ($info) {
+                                    $info['url'] = route('promotion.image', ['filename' => basename($file)]);
+                                }
+
+                                return $info;
+                            }),
+                        TextInput::make('promotion_alt')->label('Descrição da imagem')->maxLength(500)->requiredIf('promotion_enabled', true),
                     ]),
                 Section::make('FAQ')
                     ->schema([
@@ -109,6 +130,9 @@ class Settings extends Page
 
         Setting::setValue(SiteSettings::MAINTENANCE_ENABLED, (bool) ($data['maintenance_enabled'] ?? false));
         Setting::setValue(SiteSettings::MAINTENANCE_ALLOWED_IPS, $this->parseIps((string) ($data['maintenance_allowed_ips'] ?? '')));
+        Setting::setValue('promotion_enabled', (bool) ($data['promotion_enabled'] ?? false));
+        Setting::setValue('promotion_image', $data['promotion_image'] ?? null);
+        Setting::setValue('promotion_alt', $data['promotion_alt'] ?? 'Promoção Dream Gym');
         Setting::setValue('faq_items', array_values($data['faq_items'] ?? []));
         Setting::setValue(SiteSettings::EQUIPMENT_GROUPS, array_values($data['equipment_groups'] ?? []));
 

@@ -32,7 +32,7 @@ class MembershipReconciliationService
                 if ($includeLegacyBookings) {
                     $query->orWhere(fn ($q) => $q->whereNull('user_id')->where('customer_email', $user->email));
                 }
-            })->where('booking_type', Booking::TYPE_SINGLE_HOUR)
+            })->whereNull('duplicate_of_id')->where('booking_type', Booking::TYPE_SINGLE_HOUR)
                 ->whereIn('status', [Booking::STATUS_CONFIRMED, Booking::STATUS_CANCELLED])
                 ->where(function ($q) use ($includeLegacyBookings) {
                     $q->where('payment_status', 'paid');

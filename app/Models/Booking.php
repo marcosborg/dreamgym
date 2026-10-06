@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Services\Locks\LockProvisioningService;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -30,6 +31,7 @@ class Booking extends Model
 
     protected $fillable = [
         'room_id',
+        'duplicate_of_id',
         'user_id',
         'session_credit_lot_id',
         'customer_name',
@@ -100,9 +102,26 @@ class Booking extends Model
         });
     }
 
+    public function scopeHoldingCapacity(Builder $query): Builder
+    {
+        return $query->where(fn ($q) => $q->where('status', self::STATUS_CONFIRMED)
+            ->orWhere(fn ($pending) => $pending->where('status', self::STATUS_PENDING)
+                ->where('starts_at', '>', now())
+                ->where('created_at', '>', now()->subMinutes(15))
+                ->where(fn ($deadline) => $deadline->whereNull('payment_expires_at')->orWhere('payment_expires_at', '>', now()))));
+    }
+
+    public function scopeExpiredUnpaid(Builder $query): Builder
+    {
+        return $query->where('status', self::STATUS_PENDING)->where('payment_status', 'pending')
+            ->where(fn ($q) => $q->where('starts_at', '<=', now())
+                ->orWhere('created_at', '<=', now()->subMinutes(15))
+                ->orWhere('payment_expires_at', '<=', now()));
+    }
+
     public function paymentDeadline(): Carbon
     {
-        return ($this->payment_expires_at ?? ($this->created_at ?? now())->copy()->addMinutes(15))->min($this->starts_at);
+        return ($this->created_at ?? now())->copy()->addMinutes(15)->min($this->payment_expires_at ?? now()->addMinutes(15))->min($this->starts_at);
     }
 
     public function paymentHoldExpired(): bool

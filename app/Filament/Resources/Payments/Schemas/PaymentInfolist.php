@@ -13,6 +13,9 @@ class PaymentInfolist
             ->components([
                 TextEntry::make('reference'),
                 TextEntry::make('billing_nif')->label('NIF para faturação')->placeholder('—'),
+                TextEntry::make('billing_address')->label('Morada de faturação')->placeholder('—'),
+                TextEntry::make('billing_postal_code')->label('Código postal')->placeholder('—'),
+                TextEntry::make('billing_city')->label('Localidade')->placeholder('—'),
                 TextEntry::make('booking.customer_name'),
                 TextEntry::make('amount_cents')->money('EUR', divideBy: 100),
                 TextEntry::make('status')->badge(),

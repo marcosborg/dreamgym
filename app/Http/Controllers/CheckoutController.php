@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Services\BillingDetails;
 use App\Services\Payments\IfthenpayPaymentService;
 use App\Services\Payments\PaymentProvider;
 use App\Services\SandboxPaymentService;
@@ -34,7 +35,7 @@ class CheckoutController extends Controller
     {
         $rules = [
             'terms_accepted' => ['accepted'],
-            'billing_nif' => ['nullable', 'string', 'regex:/^[0-9]{9}$/'],
+            ...BillingDetails::rules(),
         ];
 
         if (! $booking->age_authorization_accepted_at) {
@@ -60,7 +61,7 @@ class CheckoutController extends Controller
             : $payments->createPayment($booking));
         $payment->update([
             'terms_accepted_at' => $payment->terms_accepted_at ?? now(),
-            'billing_nif' => $payment->status === 'paid' ? $payment->billing_nif : ($data['billing_nif'] ?? null),
+            ...BillingDetails::attributes($payment, $data),
         ]);
 
         if ($provider->isIfthenpay()) {

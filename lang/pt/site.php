@@ -201,4 +201,11 @@ return [
     'payment_waiting_callback' => 'Aguardamos confirmacao automatica da ifthenpay. Assim que o pagamento for validado, a reserva/compra fica confirmada.',
     'payment_pending_confirmation' => 'Pagamento criado. Conclui o pagamento para receber a confirmacao.',
     'payment_initialization_failed' => 'Nao foi possivel iniciar o pagamento. Confirma os dados ou tenta outro metodo.',
+    'billing_address' => 'Morada',
+    'billing_postal_code' => 'Código postal',
+    'billing_city' => 'Localidade',
+    'billing_address_help' => 'Se indicares NIF, preenche também a morada de faturação.',
+    'promotion' => 'Promoção',
+    'close_promotion' => 'Fechar promoção',
+    'payment_hold_deadline' => 'A vaga fica reservada até às :time. Conclui o pagamento até essa hora; depois a reserva é cancelada e a vaga fica disponível.',
 ];
