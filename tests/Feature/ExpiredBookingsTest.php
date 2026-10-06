@@ -27,7 +27,7 @@ class ExpiredBookingsTest extends TestCase
         $this->travel(15)->minutes();
         $this->assertTrue($booking->paymentHoldExpired());
         $this->assertFalse($availability->hasConflict($room, $booking->starts_at, $booking->ends_at));
-        $this->assertSame(1, app(ExpiredBookingService::class)->expire());
+        $this->get('/book')->assertOk();
         $this->assertSame(0, app(ExpiredBookingService::class)->expire());
         $this->assertSame('cancelled', $booking->fresh()->status);
         // Late money must be recorded for review, never reactivate the released booking.

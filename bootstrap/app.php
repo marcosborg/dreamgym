@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Middleware\ExpireUnpaidBookingHolds;
+use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\ShowMaintenancePage;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,8 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->web(append: [
-            \App\Http\Middleware\SetLocale::class,
-            \App\Http\Middleware\ShowMaintenancePage::class,
+            SetLocale::class,
+            ShowMaintenancePage::class,
+            ExpireUnpaidBookingHolds::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
