@@ -129,6 +129,14 @@ class Booking extends Model
         return $this->status === self::STATUS_PENDING && $this->paymentDeadline()->lessThanOrEqualTo(now());
     }
 
+    public function canResumePayment(): bool
+    {
+        return $this->status === self::STATUS_PENDING
+            && $this->payment_status === 'pending'
+            && $this->payment?->status !== 'paid'
+            && ! $this->paymentHoldExpired();
+    }
+
     public function canBeCancelledByCustomer(): bool
     {
         return $this->user_id !== null

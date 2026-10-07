@@ -208,4 +208,6 @@ return [
     'promotion' => 'Promotion',
     'close_promotion' => 'Close promotion',
     'payment_hold_deadline' => 'Your place is held until :time. Complete payment by then; afterwards the booking is cancelled and the place is released.',
+    'resume_payment' => 'Complete payment',
+    'resume_payment_deadline' => 'Pay by :time',
 ];

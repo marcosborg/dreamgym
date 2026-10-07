@@ -79,6 +79,7 @@
                         <dt>{{ __('site.access_code') }}</dt><dd class="font-bold">{{ $booking->accessCode?->ready_for_use ? $booking->accessCode->display_code : ($booking->status === 'confirmed' ? __('site.access_preparing') : '-') }}</dd>
                         <dt>{{ __('site.price_label') }}</dt><dd>{{ $booking->formatted_price }}</dd>
                     </dl>
+                    @include('partials.resume-booking-payment')
                     @if ($booking->canBeCancelledByCustomer())
                         <form class="mt-4" method="POST" action="{{ route('account.bookings.cancel', $booking) }}">
                             @csrf
@@ -116,6 +117,7 @@
                         <td class="p-4 font-bold">{{ $booking->accessCode?->ready_for_use ? $booking->accessCode->display_code : ($booking->status === 'confirmed' ? __('site.access_preparing') : '-') }}</td>
                         <td class="p-4">{{ $booking->formatted_price }}</td>
                         <td class="p-4 text-right">
+                            @include('partials.resume-booking-payment')
                             @if ($booking->canBeCancelledByCustomer())
                                 <form method="POST" action="{{ route('account.bookings.cancel', $booking) }}">
                                     @csrf

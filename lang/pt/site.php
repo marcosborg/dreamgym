@@ -208,4 +208,6 @@ return [
     'promotion' => 'Promoção',
     'close_promotion' => 'Fechar promoção',
     'payment_hold_deadline' => 'A vaga fica reservada até às :time. Conclui o pagamento até essa hora; depois a reserva é cancelada e a vaga fica disponível.',
+    'resume_payment' => 'Concluir pagamento',
+    'resume_payment_deadline' => 'Pagar até às :time',
 ];
