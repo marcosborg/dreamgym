@@ -238,3 +238,7 @@ body {
 .promotion-image { display: block; width: 100%; max-height: 86dvh; object-fit: contain; }
 .promotion-close { position: sticky; top: 0; height: 0; z-index: 1; text-align: right; }
 .promotion-close button { margin: 8px; width: 44px; height: 44px; border-radius: 50%; background: #fff; color: #111; box-shadow: 0 1px 8px #555; font-size: 30px; cursor: pointer; }
+
+/* Payment instructions use an explicit foreground/background pair on the dark theme. */
+.payment-details { background: #151518; color: #f7f7f8; }
+.payment-details dd { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }

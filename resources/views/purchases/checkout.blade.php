@@ -10,14 +10,14 @@
             <p class="mt-3 text-neutral-700">{{ __('site.checkout_copy') }}</p>
             <dl class="mt-8 grid gap-4 sm:grid-cols-2">
                 <div><dt class="text-sm text-neutral-500">{{ __('site.product') }}</dt><dd class="font-bold">{{ $payment->metadata['label'] ?? $payment->product_type }}</dd></div>
-                <div><dt class="text-sm text-neutral-500">{{ __('site.price_label') }}</dt><dd class="font-bold">{{ number_format($payment->amount_cents / 100, 2, ',', ' ') }} {{ $payment->currency }}</dd></div>
+                <div><dt class="text-sm text-neutral-500">{{ __('site.amount') }}</dt><dd class="font-bold">{{ number_format($payment->amount_cents / 100, 2, ',', ' ') }} {{ $payment->currency }}</dd></div>
             </dl>
             @if ($payment->metadata['founder_price'] ?? false)<p class="mt-4 text-sm font-bold">{{ __('site.founder_price') }}</p>@endif
             @if (session('status'))
                 <div class="mt-6 rounded border border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-900">{{ session('status') }}</div>
             @endif
             @if (($payment->metadata['payment_method'] ?? null) === 'multibanco')
-                <div class="mt-6 rounded-lg border border-[var(--brand-stone)] bg-neutral-50 p-5">
+                <div class="payment-details mt-6 rounded-lg border border-[var(--brand-stone)] p-5">
                     <h2 class="text-lg font-black">{{ __('site.multibanco_reference') }}</h2>
                     <dl class="mt-4 grid gap-3 sm:grid-cols-3">
                         <div><dt class="text-sm text-neutral-500">{{ __('site.entity') }}</dt><dd class="font-bold">{{ $payment->metadata['ifthenpay']['entity'] ?? '' }}</dd></div>
@@ -27,7 +27,7 @@
                     <p class="mt-4 text-sm text-neutral-700">{{ __('site.payment_waiting_callback') }}</p>
                 </div>
             @elseif (($payment->metadata['payment_method'] ?? null) === 'mbway')
-                <div class="mt-6 rounded-lg border border-[var(--brand-stone)] bg-neutral-50 p-5">
+                <div class="payment-details mt-6 rounded-lg border border-[var(--brand-stone)] p-5">
                     <h2 class="text-lg font-black">{{ __('site.mbway_request_sent') }}</h2>
                     <p class="mt-2 text-sm text-neutral-700">{{ __('site.payment_waiting_callback') }}</p>
                 </div>

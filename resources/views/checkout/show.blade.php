@@ -26,7 +26,7 @@
             @elseif ($booking->paymentHoldExpired() || $booking->status === 'cancelled')
                 <p class="mt-6 font-bold text-red-700">{{ __('site.payment_hold_expired') }}</p>
             @elseif (($payment->metadata['payment_method'] ?? null) === 'multibanco')
-                <div class="mt-6 rounded-lg border border-[var(--brand-stone)] bg-neutral-50 p-5">
+                <div class="payment-details mt-6 rounded-lg border border-[var(--brand-stone)] p-5">
                     <h2 class="text-lg font-black">{{ __('site.multibanco_reference') }}</h2>
                     <dl class="mt-4 grid gap-3 sm:grid-cols-3">
                         <div><dt class="text-sm text-neutral-500">{{ __('site.entity') }}</dt><dd class="font-bold">{{ $payment->metadata['ifthenpay']['entity'] ?? '' }}</dd></div>
@@ -36,7 +36,7 @@
                     <p class="mt-4 text-sm text-neutral-700">{{ __('site.payment_waiting_callback') }}</p>
                 </div>
             @elseif (($payment->metadata['payment_method'] ?? null) === 'mbway')
-                <div class="mt-6 rounded-lg border border-[var(--brand-stone)] bg-neutral-50 p-5">
+                <div class="payment-details mt-6 rounded-lg border border-[var(--brand-stone)] p-5">
                     <h2 class="text-lg font-black">{{ __('site.mbway_request_sent') }}</h2>
                     <p class="mt-2 text-sm text-neutral-700">{{ __('site.payment_waiting_callback') }}</p>
                 </div>
