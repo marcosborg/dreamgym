@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'credit_reason_refund_correction' => 'Cancellation refund correction',
     'cancelled_email_subject' => 'Booking cancelled',
     'credit_refund_result' => 'Credits refunded: :count',
     'invalid_phone' => 'Enter a valid phone number.',

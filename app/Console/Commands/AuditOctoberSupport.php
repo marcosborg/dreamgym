@@ -5,13 +5,15 @@ namespace App\Console\Commands;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\CreditHistory;
 use App\Services\MembershipReconciliationService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 class AuditOctoberSupport extends Command
 {
-    protected $signature = 'support:audit-october {--output=} {--test-mail}';
+    protected $signature = 'support:audit-october {--output=} {--test-mail} {--repair-refunds}';
 
     protected $description = 'Read-only checks for October support reports (no customer data changes)';
 
@@ -28,6 +30,25 @@ class AuditOctoberSupport extends Command
 
             return ['user_id' => $user->id, 'current_balance' => $user->membership_credits, 'recalculated_balance' => $preview['credits'], 'expires_at' => $user->membership_expires_at?->toIso8601String()];
         })->all();
+        if ($this->option('repair-refunds')) {
+            $result['refund_repairs'] = [];
+            foreach ($result['affected_account_balances'] as $candidate) {
+                $result['refund_repairs'][] = DB::transaction(function () use ($candidate) {
+                    $user = User::lockForUpdate()->findOrFail($candidate['user_id']);
+                    $service = app(MembershipReconciliationService::class);
+                    $correct = $service->reconcile($user, false, false)['credits'];
+                    $legacy = $service->reconcile($user, false, false, 24)['credits'];
+                    $before = $user->membership_credits;
+                    // Only restore a provable cutoff discrepancy; preserve other manual balances.
+                    if ($before === $legacy && $correct > $legacy) {
+                        $user->update(['membership_credits' => $correct]);
+                        CreditHistory::record($user, 'membership', $correct - $before, 'refund_correction');
+                    }
+
+                    return ['user_id' => $user->id, 'before' => $before, 'after' => $user->fresh()->membership_credits, 'expected' => $correct];
+                });
+            }
+        }
         if ($this->option('test-mail')) {
             try {
                 Mail::raw('Teste técnico Dream Gym: o envio de avisos de novos registos e reservas está configurado para este endereço. Este teste não cria reservas nem altera créditos.', fn ($m) => $m->to('info@dreamgym.pt')->subject('Dream Gym — teste de notificações 27/10'));

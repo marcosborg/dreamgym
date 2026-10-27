@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'credit_reason_refund_correction' => 'Correção da devolução por cancelamento',
     'cancelled_email_subject' => 'Reserva cancelada',
     'credit_refund_result' => 'Créditos devolvidos: :count',
     'invalid_phone' => 'Indique um número de telefone válido.',

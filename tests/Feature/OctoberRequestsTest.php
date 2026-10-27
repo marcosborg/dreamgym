@@ -104,6 +104,23 @@ class OctoberRequestsTest extends TestCase
         Mail::assertNothingSent();
     }
 
+    public function test_refund_repair_is_idempotent_and_preserves_unexplained_manual_balances(): void
+    {
+        $user = User::factory()->create();
+        Payment::create(['user_id' => $user->id, 'provider' => 'manual', 'product_type' => 'membership', 'reference' => 'repair-test', 'amount_cents' => 6000, 'currency' => 'EUR', 'status' => 'paid', 'paid_at' => now()->subDay(), 'metadata' => ['credits' => 30, 'days' => 30]]);
+        $booking = $this->booking($user);
+        $booking->update(['status' => 'cancelled', 'cancelled_at' => now()]);
+        app(MembershipReconciliationService::class)->reconcile($user, false, true, 24);
+        $this->assertSame(29, $user->fresh()->membership_credits);
+        $this->artisan('support:audit-october', ['--repair-refunds' => true])->assertSuccessful();
+        $this->artisan('support:audit-october', ['--repair-refunds' => true])->assertSuccessful();
+        $this->assertSame(30, $user->fresh()->membership_credits);
+        $this->assertSame(1, CreditMovement::where('reason', 'refund_correction')->count());
+        $user->update(['membership_credits' => 28]);
+        $this->artisan('support:audit-october', ['--repair-refunds' => true])->assertSuccessful();
+        $this->assertSame(28, $user->fresh()->membership_credits);
+    }
+
     private function booking(User $u): Booking
     {
         $r = Room::create(['name' => 'Gym', 'capacity' => 5, 'slot_price_cents' => 800, 'currency' => 'EUR', 'is_active' => true]);

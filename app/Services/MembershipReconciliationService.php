@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\DB;
 class MembershipReconciliationService
 {
     /** Rebuild from dated payments and reservations; replaying never grants credits twice. */
-    public function reconcile(User $user, bool $includeLegacyBookings = false, bool $persist = true): array
+    public function reconcile(User $user, bool $includeLegacyBookings = false, bool $persist = true, int $refundCutoffHours = BookingCancellationService::CREDIT_REFUND_CUTOFF_HOURS): array
     {
-        return DB::transaction(function () use ($user, $includeLegacyBookings, $persist) {
+        return DB::transaction(function () use ($user, $includeLegacyBookings, $persist, $refundCutoffHours) {
             $user = User::query()->lockForUpdate()->findOrFail($user->id);
             $payments = Payment::query()->where('user_id', $user->id)
                 ->whereNull('booking_id')->where('product_type', ProductCatalog::MEMBERSHIP)
@@ -52,7 +52,7 @@ class MembershipReconciliationService
             foreach ($bookings as $booking) {
                 $events[] = ['at' => $booking->confirmed_at ?? $booking->created_at, 'type' => 1, 'record' => $booking];
                 if ($booking->status === Booking::STATUS_CANCELLED && $booking->cancelled_at
-                    && $booking->starts_at->greaterThanOrEqualTo($booking->cancelled_at->copy()->addHours(BookingCancellationService::CREDIT_REFUND_CUTOFF_HOURS))) {
+                    && $booking->starts_at->greaterThanOrEqualTo($booking->cancelled_at->copy()->addHours($refundCutoffHours))) {
                     $events[] = ['at' => $booking->cancelled_at, 'type' => 2, 'record' => $booking];
                 }
             }
