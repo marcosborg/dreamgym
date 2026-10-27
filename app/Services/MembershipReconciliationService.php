@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\DB;
 class MembershipReconciliationService
 {
     /** Rebuild from dated payments and reservations; replaying never grants credits twice. */
-    public function reconcile(User $user, bool $includeLegacyBookings = false): array
+    public function reconcile(User $user, bool $includeLegacyBookings = false, bool $persist = true): array
     {
-        return DB::transaction(function () use ($user, $includeLegacyBookings) {
+        return DB::transaction(function () use ($user, $includeLegacyBookings, $persist) {
             $user = User::query()->lockForUpdate()->findOrFail($user->id);
             $payments = Payment::query()->where('user_id', $user->id)
                 ->whereNull('booking_id')->where('product_type', ProductCatalog::MEMBERSHIP)
@@ -89,7 +89,7 @@ class MembershipReconciliationService
                 } elseif ($expires && $event['at']->lessThan($expires) && $record->starts_at->greaterThanOrEqualTo($cycleStarts) && $record->starts_at->lessThan($expires) && $credits > 0) {
                     $credits--;
                     $charged[$record->id] = $cycle;
-                    if ($includeLegacyBookings) {
+                    if ($includeLegacyBookings && $persist) {
                         $record->updateQuietly(['user_id' => $user->id, 'paid_with' => Booking::PAID_WITH_MEMBERSHIP, 'payment_status' => 'paid']);
                     }
                 } else {
@@ -97,9 +97,10 @@ class MembershipReconciliationService
                 }
             }
             $delta = $credits - $user->membership_credits;
-            $user->update(['membership_credits' => $credits, 'membership_expires_at' => $expires]);
-
-            CreditHistory::record($user, 'membership', $delta, 'membership_recalculation');
+            if ($persist) {
+                $user->update(['membership_credits' => $credits, 'membership_expires_at' => $expires]);
+                CreditHistory::record($user, 'membership', $delta, 'membership_recalculation');
+            }
 
             return ['user_id' => $user->id, 'payments' => $payments->count(), 'bookings' => count($charged), 'credits' => $credits, 'uncovered' => $uncovered];
         });
