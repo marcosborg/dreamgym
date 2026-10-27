@@ -41,6 +41,7 @@ class BookingCreditService
 
                 return;
             }
+            CreditHistory::record($user, $method === Booking::PAID_WITH_MEMBERSHIP ? 'membership' : 'session', -1, 'booking', $booking->id);
             $booking->updateQuietly(['session_credit_lot_id' => $creditLotId, 'paid_with' => $method, 'price_cents' => 0, 'payment_status' => 'paid']);
         });
     }

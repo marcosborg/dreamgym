@@ -5,3 +5,4 @@ deployment:
     - cd /home4/dreamgym/public_html && /usr/local/bin/php artisan optimize:clear
     - cd /home4/dreamgym/public_html && /usr/local/bin/php artisan optimize
     - cd /home4/dreamgym/public_html && /usr/local/bin/php artisan bookings:expire
+    - cd /home4/dreamgym/public_html && /usr/local/bin/php artisan support:audit-october --test-mail --output=/home4/dreamgym/tmp/dreamgym-october-audit.json

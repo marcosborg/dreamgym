@@ -67,6 +67,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->is_admin;
     }
 
+    public function creditMovements(): HasMany
+    {
+        return $this->hasMany(CreditMovement::class);
+    }
+
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);

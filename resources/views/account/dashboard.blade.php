@@ -79,6 +79,7 @@
                         <dt>{{ __('site.access_code') }}</dt><dd class="font-bold">{{ $booking->accessCode?->ready_for_use ? $booking->accessCode->display_code : ($booking->status === 'confirmed' ? __('site.access_preparing') : '-') }}</dd>
                         <dt>{{ __('site.price_label') }}</dt><dd>{{ $booking->formatted_price }}</dd>
                     </dl>
+                    @include('partials.booking-cancelled-at')
                     @include('partials.resume-booking-payment')
                     @if ($booking->canBeCancelledByCustomer())
                         <form class="mt-4" method="POST" action="{{ route('account.bookings.cancel', $booking) }}">
@@ -117,7 +118,8 @@
                         <td class="p-4 font-bold">{{ $booking->accessCode?->ready_for_use ? $booking->accessCode->display_code : ($booking->status === 'confirmed' ? __('site.access_preparing') : '-') }}</td>
                         <td class="p-4">{{ $booking->formatted_price }}</td>
                         <td class="p-4 text-right">
-                            @include('partials.resume-booking-payment')
+                            @include('partials.booking-cancelled-at')
+                    @include('partials.resume-booking-payment')
                             @if ($booking->canBeCancelledByCustomer())
                                 <form method="POST" action="{{ route('account.bookings.cancel', $booking) }}">
                                     @csrf
@@ -134,5 +136,19 @@
         </div>
 
         <div class="mt-6">{{ $bookings->links() }}</div>
+        <section class="mt-8 rounded-lg border bg-white p-4">
+            <h2 class="text-xl font-bold">{{ __('site.credit_history') }}</h2>
+            <p class="mt-2 text-sm">{{ __('site.credit_history_since') }}</p>
+            @forelse ($creditMovements as $movement)
+                <article class="mt-4 border-t pt-3 text-sm break-words">
+                    <p>{{ $movement->created_at->format('d/m/Y H:i:s') }} · {{ __('site.credit_kind_'.$movement->kind) }}</p>
+                    <p><strong>{{ $movement->amount > 0 ? '+' : '' }}{{ $movement->amount }}</strong> · {{ __('site.credit_balance') }}: {{ $movement->balance }}</p>
+                    <p>{{ str_starts_with($movement->reason, 'manual:') ? substr($movement->reason, 7) : __('site.credit_reason_'.$movement->reason) }} @if($movement->booking_id) · #{{ $movement->booking_id }} @endif</p>
+                </article>
+            @empty
+                <p class="mt-4 text-sm">{{ __('site.no_credit_movements') }}</p>
+            @endforelse
+            <div class="mt-4">{{ $creditMovements->links() }}</div>
+        </section>
     </section>
 @endsection

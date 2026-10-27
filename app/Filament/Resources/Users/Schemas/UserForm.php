@@ -37,6 +37,7 @@ class UserForm
                     ->label('Admin')
                     ->helperText('Allows this user to access the admin panel.')
                     ->default(false),
+                TextInput::make('credit_adjustment_reason')->label('Motivo da alteração dos créditos')->helperText('Obrigatório quando alterar o saldo. Fica registado no histórico; não envia email.')->maxLength(200),
                 TextInput::make('session_credits')
                     ->label('Créditos de packs')
                     ->numeric()

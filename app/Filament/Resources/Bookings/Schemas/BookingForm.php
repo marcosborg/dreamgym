@@ -14,6 +14,8 @@ class BookingForm
     {
         return $schema
             ->components([
+                Toggle::make('suppress_notifications')->label('Não enviar emails ao cliente (regularização interna)')->default(false),
+                DateTimePicker::make('cancelled_at')->label('Cancelada em')->disabled()->dehydrated(false),
                 Select::make('room_id')->relationship('room', 'name')->required(),
                 Select::make('booking_type')->options(['single_hour' => 'Single hour', 'group_hour' => 'Group hour'])->required(),
                 TextInput::make('seats_reserved')->numeric()->required(),

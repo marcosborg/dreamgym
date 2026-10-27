@@ -1,6 +1,22 @@
 <?php
 
 return [
+    'cancelled_email_subject' => 'Booking cancelled',
+    'credit_refund_result' => 'Credits refunded: :count',
+    'invalid_phone' => 'Enter a valid phone number.',
+    'cancelled_at' => 'Cancelled at',
+    'credit_history' => 'Credit history',
+    'credit_history_since' => 'Movements recorded from 27 October 2026. The balance may include earlier credits.',
+    'credit_kind_membership' => 'Membership',
+    'credit_kind_session' => 'Pack',
+    'credit_balance' => 'Balance',
+    'credit_reason_booking' => 'Booking',
+    'credit_reason_cancellation' => 'Cancellation refund',
+    'credit_reason_purchase' => 'Pack purchase',
+    'credit_reason_expiry' => 'Credit expiry',
+    'credit_reason_membership_recalculation' => 'Membership update',
+    'no_credit_movements' => 'No recorded movements yet.',
+
     'founder_price' => 'Founding member price · 3-day renewal grace period.',
     'founder_checkout_expired' => 'The founding member price deadline has passed. Return to the booking page and start a new purchase at the current price.',
     'billing_nif' => 'Tax number for invoicing (optional)',

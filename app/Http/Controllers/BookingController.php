@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Room;
 use App\Models\User;
+use App\Rules\CustomerPhone;
 use App\Services\AvailabilityService;
+use App\Services\CreditHistory;
+use App\Services\CustomerRegistrationMail;
 use App\Services\FounderMembershipService;
 use App\Services\Payments\IfthenpayPaymentService;
 use App\Services\Payments\PaymentProvider;
@@ -47,9 +50,9 @@ class BookingController extends Controller
             'slots' => ['required_without:starts_at', 'array', 'min:1', 'max:24'],
             'slots.*' => ['required', 'date_format:Y-m-d H:i:s', 'distinct'],
             'booking_type' => ['required', 'in:single_hour,group_hour'],
-            'customer_name' => ['required', 'string', 'max:120'],
+            'customer_name' => ['required', 'string', 'max:120', 'not_regex:/[<>]/'],
             'customer_email' => ['required', 'email', 'max:160'],
-            'customer_phone' => ['nullable', 'string', 'max:40'],
+            'customer_phone' => ['nullable', 'string', 'max:40', new CustomerPhone],
             'bringing_children' => ['required', 'boolean'],
             'children_responsibility_accepted' => ['required_if:bringing_children,1', 'accepted_if:bringing_children,1'],
             'create_account' => ['nullable', 'boolean'],
@@ -95,8 +98,13 @@ class BookingController extends Controller
                     'is_admin' => false,
                 ]);
 
+                CustomerRegistrationMail::send($user);
                 Auth::login($user);
             }
+        }
+
+        if (Auth::check()) {
+            $request->session()->regenerate();
         }
 
         return DB::transaction(function () use ($request, $data, $room, $selectedStarts, $multiple, $isGroup, $seatsReserved, $groupProduct, $catalog, $payments, $user) {
@@ -180,6 +188,9 @@ class BookingController extends Controller
                     'payment_expires_at' => $status === Booking::STATUS_PENDING ? now()->addMinutes(15)->min($startsAt) : null,
                 ]);
 
+                if (in_array($paidWith, [Booking::PAID_WITH_MEMBERSHIP, Booking::PAID_WITH_CREDITS], true)) {
+                    CreditHistory::record($user, $paidWith === Booking::PAID_WITH_MEMBERSHIP ? 'membership' : 'session', -1, 'booking', $booking->id);
+                }
                 $bookings->push($booking);
             }
 

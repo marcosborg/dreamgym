@@ -4,6 +4,7 @@
     <section class="section max-w-md py-12">
         <form method="POST" action="{{ route('register.store') }}" class="rounded-lg border border-[var(--brand-stone)] bg-white p-8">
             @csrf
+            <div aria-hidden="true" style="position:absolute;left:-10000px"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
             <h1 class="text-3xl font-black">{{ __('site.register') }}</h1>
             <div class="mt-6 space-y-4">
                 <label class="block text-sm font-bold">{{ __('site.name') }}<input name="name" class="field mt-1" required></label>

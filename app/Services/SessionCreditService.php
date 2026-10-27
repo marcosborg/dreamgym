@@ -24,6 +24,7 @@ class SessionCreditService
         ]);
         if ($lot->wasRecentlyCreated) {
             $user->increment('session_credits', $credits);
+            CreditHistory::record($user, 'session', $credits, 'purchase');
         }
     }
 
@@ -41,6 +42,7 @@ class SessionCreditService
             }
             if ($lot->expires_at->lessThanOrEqualTo(now()) && $lot->remaining_credits > 0) {
                 $user->decrement('session_credits', $lot->remaining_credits);
+                CreditHistory::record($user, 'session', -$lot->remaining_credits, 'expiry');
                 $lot->update(['remaining_credits' => 0]);
             }
         }

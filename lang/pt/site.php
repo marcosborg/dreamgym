@@ -1,6 +1,22 @@
 <?php
 
 return [
+    'cancelled_email_subject' => 'Reserva cancelada',
+    'credit_refund_result' => 'Créditos devolvidos: :count',
+    'invalid_phone' => 'Indique um número de telefone válido.',
+    'cancelled_at' => 'Cancelada em',
+    'credit_history' => 'Histórico de créditos',
+    'credit_history_since' => 'Movimentos registados a partir de 27/10/2026. O saldo pode incluir créditos anteriores.',
+    'credit_kind_membership' => 'Mensalidade',
+    'credit_kind_session' => 'Pack',
+    'credit_balance' => 'Saldo',
+    'credit_reason_booking' => 'Reserva',
+    'credit_reason_cancellation' => 'Devolução por cancelamento',
+    'credit_reason_purchase' => 'Compra de pack',
+    'credit_reason_expiry' => 'Expiração de créditos',
+    'credit_reason_membership_recalculation' => 'Atualização da mensalidade',
+    'no_credit_movements' => 'Ainda não existem movimentos registados.',
+
     'founder_price' => 'Preço de sócio fundador · 3 dias de tolerância para renovar.',
     'founder_checkout_expired' => 'O prazo do preço de fundador terminou. Volta à página de reservas e inicia uma nova compra ao preço atual.',
     'billing_nif' => 'NIF para faturação (opcional)',

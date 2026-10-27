@@ -26,6 +26,7 @@ class BookingsTable
                 TextColumn::make('booking_type')->badge(),
                 TextColumn::make('seats_reserved')->label('Seats'),
                 TextColumn::make('status')->badge(),
+                TextColumn::make('cancelled_at')->label('Cancelada em')->dateTime('d/m/Y H:i:s')->sortable(),
                 TextColumn::make('payment_status')->badge(),
                 TextColumn::make('paid_with')->badge(),
                 IconColumn::make('bringing_children')->boolean()->label('Children'),

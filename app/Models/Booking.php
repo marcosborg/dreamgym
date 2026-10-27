@@ -55,6 +55,7 @@ class Booking extends Model
         'confirmed_at',
         'payment_expires_at',
         'cancelled_at',
+        'suppress_notifications',
     ];
 
     protected function casts(): array
@@ -65,6 +66,7 @@ class Booking extends Model
             'confirmed_at' => 'datetime',
             'payment_expires_at' => 'datetime',
             'cancelled_at' => 'datetime',
+            'suppress_notifications' => 'boolean',
             'children_responsibility_accepted_at' => 'datetime',
             'terms_accepted_at' => 'datetime',
             'age_authorization_accepted_at' => 'datetime',

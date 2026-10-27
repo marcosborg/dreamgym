@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Payment;
 use App\Models\Room;
 use App\Models\User;
+use App\Rules\CustomerPhone;
 use App\Services\BillingDetails;
+use App\Services\CustomerRegistrationMail;
 use App\Services\FounderMembershipService;
 use App\Services\Payments\IfthenpayPaymentService;
 use App\Services\Payments\PaymentProvider;
@@ -26,9 +28,9 @@ class PurchaseController extends Controller
         $rules = [
             'product_id' => ['nullable', 'integer'],
             'product_type' => ['required_without:product_id', 'nullable', 'in:session_pack,membership'],
-            'customer_name' => [Auth::check() ? 'nullable' : 'required', 'string', 'max:120'],
+            'customer_name' => [Auth::check() ? 'nullable' : 'required', 'string', 'max:120', 'not_regex:/[<>]/'],
             'customer_email' => [Auth::check() ? 'nullable' : 'required', 'email', 'max:160'],
-            'customer_phone' => ['nullable', 'string', 'max:40'],
+            'customer_phone' => ['nullable', 'string', 'max:40', new CustomerPhone],
             'password' => [Auth::check() ? 'nullable' : 'required', 'string', 'min:8', 'confirmed'],
         ];
 
@@ -57,10 +59,12 @@ class PurchaseController extends Controller
                     'is_admin' => false,
                 ]);
 
+                CustomerRegistrationMail::send($user);
                 Auth::login($user);
             }
         }
 
+        $request->session()->regenerate();
         $product = ! empty($data['product_id'])
             ? $catalog->findPurchaseProduct((int) $data['product_id'], $room)
             : ($data['product_type'] === ProductCatalog::SESSION_PACK

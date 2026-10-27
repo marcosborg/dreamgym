@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Rules\CustomerPhone;
+use App\Services\CustomerRegistrationMail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -41,9 +43,10 @@ class CustomerAuthController extends Controller
     public function register(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:120'],
+            'name' => ['required', 'string', 'max:120', 'not_regex:/[<>]/'],
             'email' => ['required', 'email', 'max:160', 'unique:users,email'],
-            'phone' => ['nullable', 'string', 'max:40'],
+            'phone' => ['nullable', 'string', 'max:40', new CustomerPhone],
+            'website' => ['nullable', 'max:0'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
@@ -55,7 +58,9 @@ class CustomerAuthController extends Controller
             'is_admin' => false,
         ]);
 
+        CustomerRegistrationMail::send($user);
         Auth::login($user);
+        $request->session()->regenerate();
 
         return redirect()->route('account.dashboard');
     }

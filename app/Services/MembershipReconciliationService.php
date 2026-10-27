@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Booking;
+use App\Models\CreditMovement;
 use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -51,9 +52,12 @@ class MembershipReconciliationService
             foreach ($bookings as $booking) {
                 $events[] = ['at' => $booking->confirmed_at ?? $booking->created_at, 'type' => 1, 'record' => $booking];
                 if ($booking->status === Booking::STATUS_CANCELLED && $booking->cancelled_at
-                    && $booking->starts_at->greaterThanOrEqualTo($booking->cancelled_at->copy()->addHours(24))) {
+                    && $booking->starts_at->greaterThanOrEqualTo($booking->cancelled_at->copy()->addHours(BookingCancellationService::CREDIT_REFUND_CUTOFF_HOURS))) {
                     $events[] = ['at' => $booking->cancelled_at, 'type' => 2, 'record' => $booking];
                 }
+            }
+            foreach (CreditMovement::where('user_id', $user->id)->where('kind', 'membership')->where('reason', 'like', 'manual:%')->get() as $movement) {
+                $events[] = ['at' => $movement->created_at, 'type' => 3, 'record' => $movement];
             }
             usort($events, fn ($a, $b) => ($a['at'] <=> $b['at']) ?: ($a['type'] <=> $b['type']) ?: ($a['record']->id <=> $b['record']->id));
 
@@ -74,6 +78,10 @@ class MembershipReconciliationService
                     }
                     $credits += max(0, (int) ($record->metadata['credits'] ?? ProductCatalog::MEMBERSHIP_CREDITS));
                     $expires = $expires->copy()->addDays(max(1, (int) ($record->metadata['days'] ?? ProductCatalog::MEMBERSHIP_DAYS)));
+                } elseif ($event['type'] === 3) {
+                    if ($expires && $event['at']->lessThan($expires)) {
+                        $credits = max(0, $credits + $record->amount);
+                    }
                 } elseif ($event['type'] === 2) {
                     if (isset($charged[$record->id]) && $cycle === $charged[$record->id]) {
                         $credits++;
@@ -88,7 +96,10 @@ class MembershipReconciliationService
                     $uncovered++;
                 }
             }
+            $delta = $credits - $user->membership_credits;
             $user->update(['membership_credits' => $credits, 'membership_expires_at' => $expires]);
+
+            CreditHistory::record($user, 'membership', $delta, 'membership_recalculation');
 
             return ['user_id' => $user->id, 'payments' => $payments->count(), 'bookings' => count($charged), 'credits' => $credits, 'uncovered' => $uncovered];
         });

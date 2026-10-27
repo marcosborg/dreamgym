@@ -2,13 +2,12 @@
 
 namespace App\Console\Commands;
 
-use App\Mail\BookingConfirmed;
 use App\Models\AccessCode;
+use App\Services\BookingMail;
 use App\Services\Locks\LockProvisioningService;
 use App\Services\Locks\TtlockClient;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Mail;
 use Throwable;
 
 class TtlockSync extends Command
@@ -48,7 +47,7 @@ class TtlockSync extends Command
                     if ($code->ready_for_use && ! $code->access_notified_at) {
                         try {
                             $booking = $code->booking()->with(['room', 'accessCode'])->firstOrFail();
-                            Mail::to($booking->customer_email)->send(new BookingConfirmed($booking));
+                            BookingMail::confirmed($booking);
                             $code->update(['access_notified_at' => now()]);
                         } catch (Throwable) {
                             $this->warn('Email de acesso pendente: reserva '.$code->booking_id);

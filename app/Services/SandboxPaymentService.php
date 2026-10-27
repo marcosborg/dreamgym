@@ -2,14 +2,12 @@
 
 namespace App\Services;
 
-use App\Mail\BookingConfirmed;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\Room;
 use App\Services\Locks\LockProvisioningService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class SandboxPaymentService
@@ -74,7 +72,7 @@ class SandboxPaymentService
                 DB::afterCommit(fn () => $this->activateTtlockAccess($booking->id));
             } else {
                 app(LockProvisioningService::class)->provision($accessCode);
-                Mail::to($booking->customer_email)->send(new BookingConfirmed($booking->fresh(['room', 'accessCode'])));
+                BookingMail::confirmed($booking->fresh(['room', 'accessCode']));
                 if ($accessCode->fresh()->ready_for_use) {
                     $accessCode->update(['access_notified_at' => now()]);
                 }
@@ -93,13 +91,18 @@ class SandboxPaymentService
                 'confirmed_at' => now(),
             ]);
 
+            // A retrospective regularization must never issue a door code.
+            if ($booking->ends_at->lessThanOrEqualTo(now())) {
+                return $booking->fresh(['payment', 'accessCode', 'room']);
+            }
+
             $accessCode = app(AccessCodeService::class)->createForBooking($booking);
             if (config('lock.provider') === 'ttlock') {
                 // Physical access and rotated tokens must survive independently of the booking transaction.
                 DB::afterCommit(fn () => $this->activateTtlockAccess($booking->id));
             } else {
                 app(LockProvisioningService::class)->provision($accessCode);
-                Mail::to($booking->customer_email)->send(new BookingConfirmed($booking->fresh(['room', 'accessCode'])));
+                BookingMail::confirmed($booking->fresh(['room', 'accessCode']));
                 if ($accessCode->fresh()->ready_for_use) {
                     $accessCode->update(['access_notified_at' => now()]);
                 }
@@ -117,7 +120,7 @@ class SandboxPaymentService
         }
         $code = app(LockProvisioningService::class)->provision($booking->accessCode);
         try {
-            Mail::to($booking->customer_email)->send(new BookingConfirmed($booking->fresh(['room', 'accessCode'])));
+            BookingMail::confirmed($booking->fresh(['room', 'accessCode']));
             if ($code->ready_for_use) {
                 $code->update(['access_notified_at' => now()]);
             }

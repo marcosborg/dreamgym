@@ -17,6 +17,10 @@
 {{ __('site.access_preparing') }}
 @endif
 
+@if (in_array($booking->paid_with, ['membership', 'credits']))
+**{{ __('site.credit_history') }}:** −1 · {{ __('site.credit_kind_'.($booking->paid_with === 'membership' ? 'membership' : 'session')) }}
+@endif
+
 {{ __('site.email_footer') }}
 
 {{ config('app.name') }}

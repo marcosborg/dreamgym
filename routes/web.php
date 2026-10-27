@@ -42,8 +42,8 @@ Route::get('/privacy', function (LegalTerms $terms) {
 Route::get('/promotion/{filename}', PromotionImageController::class)->name('promotion.image');
 
 Route::get('/book', [BookingController::class, 'index'])->name('bookings.index');
-Route::post('/book', [BookingController::class, 'store'])->name('bookings.store');
-Route::post('/purchase', [PurchaseController::class, 'store'])->name('purchase.store');
+Route::post('/book', [BookingController::class, 'store'])->middleware('throttle:20,1')->name('bookings.store');
+Route::post('/purchase', [PurchaseController::class, 'store'])->middleware('throttle:20,1')->name('purchase.store');
 Route::get('/purchase/{payment}/checkout', [PurchaseController::class, 'checkout'])->middleware('auth')->name('purchase.checkout');
 Route::post('/purchase/{payment}/complete', [PurchaseController::class, 'complete'])->middleware('auth')->name('purchase.complete');
 Route::get('/purchase/{payment}/confirmed', [PurchaseController::class, 'confirmed'])->middleware('auth')->name('purchase.confirmed');
@@ -58,9 +58,9 @@ Route::get('/media/{path}', PersonalTrainerPhotoController::class)
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [CustomerAuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [CustomerAuthController::class, 'login'])->name('login.store');
+    Route::post('/login', [CustomerAuthController::class, 'login'])->middleware('throttle:10,1')->name('login.store');
     Route::get('/register', [CustomerAuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [CustomerAuthController::class, 'register'])->name('register.store');
+    Route::post('/register', [CustomerAuthController::class, 'register'])->middleware('throttle:5,10')->name('register.store');
 });
 
 Route::post('/logout', [CustomerAuthController::class, 'logout'])->middleware('auth')->name('logout');
