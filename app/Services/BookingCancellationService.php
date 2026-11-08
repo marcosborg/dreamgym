@@ -60,6 +60,18 @@ class BookingCancellationService
 
     public function shouldReturnCredit(Booking $booking): bool
     {
+        if ($booking->paid_with === Booking::PAID_WITH_MEMBERSHIP && $booking->user_id) {
+            $latest = $booking->user->payments()->whereNull('booking_id')->where('product_type', ProductCatalog::MEMBERSHIP)
+                ->where('status', 'paid')->orderByRaw('COALESCE(paid_at, created_at) DESC')->orderByDesc('id')->first();
+            if ($latest) {
+                $start = ($latest->paid_at ?? $latest->created_at)->copy()->startOfDay();
+                if (($booking->confirmed_at ?? $booking->created_at)->lessThan($start)
+                    || now()->greaterThanOrEqualTo($start->copy()->addDays(max(1, (int) ($latest->metadata['days'] ?? 30))))) {
+                    return false;
+                }
+            }
+        }
+
         return $booking->user_id !== null
             && $booking->booking_type === Booking::TYPE_SINGLE_HOUR
             && $booking->payment_status === 'paid'

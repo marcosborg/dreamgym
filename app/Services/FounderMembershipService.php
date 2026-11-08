@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use Carbon\Carbon;
 
 class FounderMembershipService
 {
@@ -10,23 +11,25 @@ class FounderMembershipService
 
     public const GRACE_DAYS = 3;
 
+    public const CAMPAIGN_END = '2026-12-31 23:59:59';
+
     /** Replay paid renewals so paying again after a break never restores the discount. */
     public function eligible(User $user): bool
     {
-        if (! $user->is_founder) {
+        $expires = null;
+        $payments = $user->payments()->whereNull('booking_id')->where('product_type', ProductCatalog::MEMBERSHIP)
+            ->where('status', 'paid')->orderByRaw('COALESCE(paid_at, created_at)')->orderBy('id')->get();
+        $joinedAt = $payments->first()?->paid_at ?? $payments->first()?->created_at ?? now();
+        if (! $user->is_founder && $joinedAt->greaterThan(Carbon::parse(self::CAMPAIGN_END))) {
             return false;
         }
-
-        $expires = null;
-        foreach ($user->payments()->whereNull('booking_id')->where('product_type', ProductCatalog::MEMBERSHIP)
-            ->where('status', 'paid')->orderByRaw('COALESCE(paid_at, created_at)')->orderBy('id')->get() as $payment) {
+        foreach ($payments as $payment) {
             $paidAt = $payment->paid_at ?? $payment->created_at;
             if ($expires && $paidAt->greaterThan($expires->copy()->addDays(self::GRACE_DAYS))) {
                 return false;
             }
             $start = $paidAt->copy()->startOfDay();
-            $expires = ($expires && $expires->greaterThan($start) ? $expires : $start)
-                ->copy()->addDays(max(1, (int) ($payment->metadata['days'] ?? ProductCatalog::MEMBERSHIP_DAYS)));
+            $expires = $start->copy()->addDays(max(1, (int) ($payment->metadata['days'] ?? ProductCatalog::MEMBERSHIP_DAYS)));
         }
 
         // A newly designated founder can make their first purchase at the founder price.

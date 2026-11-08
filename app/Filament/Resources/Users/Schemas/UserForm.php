@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
@@ -31,7 +32,7 @@ class UserForm
                     ->maxLength(255),
                 Toggle::make('is_founder')
                     ->label('Sócio fundador')
-                    ->helperText('Mensalidade de 40 € com 3 dias de tolerância. Uma interrupção no histórico de pagamentos faz perder o desconto. Identificar apenas os sócios aprovados pelo David (20 inicialmente; até 30 se decidir alargar).')
+                    ->helperText('Campanha de lançamento: adesão até 31/12/2026, sem limite de sócios. 40 € por 30 dias, com 3 dias de tolerância para renovar. Uma interrupção faz perder o desconto.')
                     ->default(false),
                 Toggle::make('is_admin')
                     ->label('Admin')
@@ -46,6 +47,10 @@ class UserForm
                     ->label('Créditos da mensalidade')
                     ->numeric()
                     ->default(0),
+                DateTimePicker::make('membership_expires_at')
+                    ->label('Validade dos créditos da mensalidade')
+                    ->seconds(false)
+                    ->helperText('Os créditos da mensalidade só permitem reservar antes desta data. Ao atribuir créditos manualmente, indique a validade acordada. Para transferências de créditos avulsos, use Créditos de packs.'),
             ]);
     }
 }

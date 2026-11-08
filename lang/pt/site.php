@@ -18,7 +18,7 @@ return [
     'credit_reason_membership_recalculation' => 'Atualização da mensalidade',
     'no_credit_movements' => 'Ainda não existem movimentos registados.',
 
-    'founder_price' => 'Preço de sócio fundador · 3 dias de tolerância para renovar.',
+    'founder_price' => 'Plano 30 · Campanha de Lançamento: adesão até 31/12/2026, sem limite de sócios. 40 € por 30 dias; renova com até 3 dias de tolerância para manter o preço.',
     'founder_checkout_expired' => 'O prazo do preço de fundador terminou. Volta à página de reservas e inicia uma nova compra ao preço atual.',
     'billing_nif' => 'NIF para faturação (opcional)',
     'billing_nif_help' => 'Introduz 9 dígitos, sem espaços.',
@@ -37,7 +37,7 @@ return [
     'credits_date_unavailable' => ':count créditos anteriores: validade por confirmar.',
     'session_credit_validity' => 'Validade das sessões/packs',
     'session_credit_duration' => '90 dias por compra',
-    'membership_duration' => '30 dias por mensalidade',
+    'membership_duration' => '30 dias por mensalidade · Cada renovação inicia um novo período, sem acumular créditos anteriores.',
     'credits_expiry' => ':count crédito válido até :date|:count créditos válidos até :date',
 
     'age_authorization_acceptance' => 'Confirmo que tenho pelo menos 16 anos e, caso tenha 16 ou 17 anos, tenho autorização do meu representante legal.',

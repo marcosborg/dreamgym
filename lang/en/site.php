@@ -18,7 +18,7 @@ return [
     'credit_reason_membership_recalculation' => 'Membership update',
     'no_credit_movements' => 'No recorded movements yet.',
 
-    'founder_price' => 'Founding member price · 3-day renewal grace period.',
+    'founder_price' => 'Plan 30 · Launch campaign: join by 31/12/2026, with no member limit. €40 per 30 days; renew within the 3-day grace period to keep this price.',
     'founder_checkout_expired' => 'The founding member price deadline has passed. Return to the booking page and start a new purchase at the current price.',
     'billing_nif' => 'Tax number for invoicing (optional)',
     'billing_nif_help' => 'Enter a Portuguese tax number with 9 digits, without spaces.',
@@ -37,7 +37,7 @@ return [
     'credits_date_unavailable' => ':count previous credits: expiry date to be confirmed.',
     'session_credit_validity' => 'Session/pack validity',
     'session_credit_duration' => '90 days per purchase',
-    'membership_duration' => '30 days per membership',
+    'membership_duration' => '30 days per membership · Each renewal starts a new period; unused credits do not carry over.',
     'credits_expiry' => ':count credit valid until :date|:count credits valid until :date',
 
     'age_authorization_acceptance' => 'I confirm that I am at least 16 years old and, if I am 16 or 17, I have permission from my legal guardian.',

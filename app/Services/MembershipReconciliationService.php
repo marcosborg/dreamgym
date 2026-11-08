@@ -11,9 +11,13 @@ use Illuminate\Support\Facades\DB;
 class MembershipReconciliationService
 {
     /** Rebuild from dated payments and reservations; replaying never grants credits twice. */
-    public function reconcile(User $user, bool $includeLegacyBookings = false, bool $persist = true, int $refundCutoffHours = BookingCancellationService::CREDIT_REFUND_CUTOFF_HOURS): array
+    public function reconcile(User $user, bool $includeLegacyBookings = false, bool $persist = true, int $refundCutoffHours = BookingCancellationService::CREDIT_REFUND_CUTOFF_HOURS, bool $resetOnRenewal = true): array
     {
-        return DB::transaction(function () use ($user, $includeLegacyBookings, $persist, $refundCutoffHours) {
+        if (! $resetOnRenewal && $persist) {
+            throw new \InvalidArgumentException('Legacy accumulation is only available for read-only audits.');
+        }
+
+        return DB::transaction(function () use ($user, $includeLegacyBookings, $persist, $refundCutoffHours, $resetOnRenewal) {
             $user = User::query()->lockForUpdate()->findOrFail($user->id);
             $payments = Payment::query()->where('user_id', $user->id)
                 ->whereNull('booking_id')->where('product_type', ProductCatalog::MEMBERSHIP)
@@ -70,11 +74,12 @@ class MembershipReconciliationService
             foreach ($events as $event) {
                 $record = $event['record'];
                 if ($event['type'] === 0) {
-                    if (! $expires || $expires->lessThanOrEqualTo($event['at'])) {
-                        $credits = 0;
+                    // Every renewal starts a fresh allowance; unused credits never carry over.
+                    if ($resetOnRenewal || ! $expires || $expires->lessThanOrEqualTo($event['at'])) {
                         $cycle++;
-                        $expires = $event['at']->copy();
                         $cycleStarts = $event['at']->copy();
+                        $credits = 0;
+                        $expires = $cycleStarts->copy();
                     }
                     $credits += max(0, (int) ($record->metadata['credits'] ?? ProductCatalog::MEMBERSHIP_CREDITS));
                     $expires = $expires->copy()->addDays(max(1, (int) ($record->metadata['days'] ?? ProductCatalog::MEMBERSHIP_DAYS)));

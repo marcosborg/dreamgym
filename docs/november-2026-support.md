@@ -1,0 +1,10 @@
+# Support requests, 28 October–8 November 2026
+
+- Pack expiry: production MySQL implicitly added `ON UPDATE CURRENT_TIMESTAMP` to the first non-null TIMESTAMP (`session_credit_lots.expires_at`). Consuming a credit therefore shortened its validity. The new migration changes the column to DATETIME, restores purchase-based deadlines and restores the single audited premature expiry using strict ledger/balance guards. Production verified: lot 1/user 64 has five credits until 2027-02-05 11:20:33; the column has no automatic update clause.
+- Membership renewal: each paid renewal resets the allowance and begins its own 30-day period; unused credits do not accumulate. Cancellation of an older-cycle booking cannot credit the new cycle. Packs remain valid for 90 days independently.
+- Historical membership repair: `support:repair-november` previews changes. `--apply` changes only balances matching the previous algorithm; unexplained differences are reported for review. `--output` writes a private audit of previous balances/expiry and outcomes.
+- Manual credits: the user editor exposes membership validity and rejects a positive adjustment with no usable expiry. Mariana's transfer was already moved from membership to session credits on 2 November, followed by a successful booking; her production balance was 15 session credits on inspection. Do not duplicate that adjustment.
+- Launch campaign: no member limit for joining through 31 December 2026. Membership price remains EUR 40 while renewals are within the three-day grace period; a break loses the discount. Packs are unaffected.
+- David mentioned five optional improvements in a PDF and requested an individual estimate. No PDF appeared in the reviewed messages; request it before estimating. No price or extra work commitment has been made.
+
+Validation: 163 tests / 898 assertions passed, production asset build and Blade cache passed. The pack fix was deployed and verified independently before the remaining changes, because the customer needed access urgently.

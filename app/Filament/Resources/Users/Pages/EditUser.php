@@ -6,6 +6,7 @@ use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
 use App\Services\CreditHistory;
 use App\Services\SessionCreditService;
+use Carbon\Carbon;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
@@ -28,6 +29,10 @@ class EditUser extends EditRecord
                 if (($data[$kind.'_credits'] ?? 0) < 0 || ($changes[$kind] && ! $reason)) {
                     throw ValidationException::withMessages(['data.credit_adjustment_reason' => 'Indique o motivo e um saldo não negativo.']);
                 }
+            }
+            if ($changes['membership'] > 0 && (! filled($data['membership_expires_at'] ?? $record->membership_expires_at)
+                || ! Carbon::parse($data['membership_expires_at'] ?? $record->membership_expires_at)->isFuture())) {
+                throw ValidationException::withMessages(['data.membership_expires_at' => 'Indique uma validade futura para que o cliente possa utilizar estes créditos.']);
             }
             $record->update($data);
             foreach ($changes as $kind => $delta) {

@@ -37,6 +37,7 @@ class FounderMembershipTest extends TestCase
         $this->assertSame(4000, $pending->amount_cents);
         $this->assertTrue($pending->metadata['founder_price']);
         $regular = User::factory()->create();
+        $this->travelTo(now()->setDate(2027, 1, 1));
         $this->actingAs($regular)->post(route('purchase.store'), ['product_id' => $product->id, 'is_founder' => true, 'amount_cents' => 4000])->assertRedirect();
         $this->assertSame(6000, $regular->payments()->first()->amount_cents);
         $this->assertFalse($regular->fresh()->is_founder);
@@ -56,14 +57,15 @@ class FounderMembershipTest extends TestCase
         $this->assertFalse(app(FounderMembershipService::class)->eligible($user));
     }
 
-    public function test_timely_renewals_preserve_price_and_early_renewal_extends_existing_cycle(): void
+    public function test_timely_renewals_preserve_price_and_early_renewal_starts_a_new_cycle(): void
     {
         $user = User::factory()->create(['is_founder' => true]);
         $this->paid($user, '2026-08-01 12:00:00');
-        $this->paid($user, '2026-08-20 12:00:00'); // extends Aug 31 through Sep 30.
+        $this->paid($user, '2026-08-20 12:00:00'); // New cycle ends September 19.
+        $this->travelTo(now()->setDate(2026, 9, 18));
         $this->assertTrue(app(FounderMembershipService::class)->eligible($user));
-        $this->paid($user, '2026-09-30 11:00:00');
-        $this->travelTo(now()->setDate(2026, 10, 25));
+        $this->paid($user, '2026-09-18 11:00:00');
+        $this->travelTo(now()->setDate(2026, 10, 15));
         $this->assertTrue(app(FounderMembershipService::class)->eligible($user));
     }
 
