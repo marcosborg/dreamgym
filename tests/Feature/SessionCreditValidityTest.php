@@ -71,6 +71,22 @@ class SessionCreditValidityTest extends TestCase
         $this->assertSame(6, $user->fresh()->session_credits);
     }
 
+    public function test_spending_and_refunding_never_rewrite_the_pack_deadline(): void
+    {
+        $user = User::factory()->create(['session_credits' => 0]);
+        $payment = $this->purchase($user);
+        $deadline = $payment->paid_at->copy()->addDays(90);
+        $this->travel(2)->hours();
+        $lotId = DB::transaction(fn () => app(SessionCreditService::class)->consume($user->fresh(), now()->addHour()));
+        $this->assertTrue(SessionCreditLot::findOrFail($lotId)->expires_at->equalTo($deadline));
+        $this->travel(1)->days();
+        $this->artisan('credits:expire')->assertSuccessful();
+        $this->assertSame(5, $user->fresh()->session_credits);
+        $column = DB::selectOne("SHOW COLUMNS FROM session_credit_lots LIKE 'expires_at'");
+        $this->assertStringNotContainsString('on update', strtolower($column->Extra));
+        $this->assertSame('datetime', $column->Type);
+    }
+
     public function test_cancellation_returns_credit_to_original_lot_without_extending_it(): void
     {
         $user = User::factory()->create(['session_credits' => 0]);
