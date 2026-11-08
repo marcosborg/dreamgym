@@ -8,3 +8,5 @@
 - David mentioned five optional improvements in a PDF and requested an individual estimate. No PDF appeared in the reviewed messages; request it before estimating. No price or extra work commitment has been made.
 
 Validation: 163 tests / 898 assertions passed, production asset build and Blade cache passed. The pack fix was deployed and verified independently before the remaining changes, because the customer needed access urgently.
+
+Production rollout: `b2e0e6f9` at 12:19 and `6eff4e47` at 12:24 on 8 November. The private audit is `/home4/dreamgym/tmp/dreamgym-november-audit.json` (0600). Verified carry-over corrections: user 6, 11→0; user 7, 46→26; user 13, 51→24. Three unexplained balances were preserved for client confirmation: users 20, 21, 43. User 20 has only one paid membership in the current history, while stored validity/balance indicate another adjustment; do not infer or create a payment. David's own account currently has zero membership credits and no paid membership records; do not reconstruct deleted history. The one-time repair is removed from deployment after its successful run.
