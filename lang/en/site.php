@@ -136,7 +136,7 @@ return [
     'checkout_copy' => 'Choose the payment method and confirm. The booking is only confirmed after payment validation.',
     'pay_now' => 'Continue payment',
     'confirmed_title' => 'Booking confirmed',
-    'confirmed_copy' => 'The confirmation email was sent and your access code was generated.',
+    'confirmed_copy' => 'Your booking is confirmed. Check the access code status below.',
     'room' => 'Room',
     'date' => 'Date',
     'time' => 'Time',

@@ -136,7 +136,7 @@ return [
     'checkout_copy' => 'Escolhe o metodo de pagamento e confirma. A reserva so fica confirmada depois da validacao do pagamento.',
     'pay_now' => 'Continuar pagamento',
     'confirmed_title' => 'Reserva confirmada',
-    'confirmed_copy' => 'O email de confirmação foi enviado e o teu código de acesso foi gerado.',
+    'confirmed_copy' => 'A tua reserva está confirmada. Consulta abaixo o estado do código de acesso.',
     'room' => 'Sala',
     'date' => 'Data',
     'time' => 'Hora',
