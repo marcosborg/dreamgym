@@ -9,6 +9,8 @@ return [
     'credit_history' => 'Histórico de créditos',
     'credit_history_since' => 'Movimentos registados a partir de 27/10/2026. O saldo pode incluir créditos anteriores.',
     'credit_kind_membership' => 'Mensalidade',
+    'credit_kind_single_session' => 'Sessão individual',
+    'credit_reason_single_purchase' => 'Compra de sessão individual',
     'credit_kind_session' => 'Pack',
     'credit_balance' => 'Saldo',
     'credit_reason_booking' => 'Reserva',

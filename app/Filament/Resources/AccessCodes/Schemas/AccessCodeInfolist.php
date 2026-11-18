@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\AccessCodes\Schemas;
 
+use App\Models\AccessCode;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
 
@@ -19,7 +20,7 @@ class AccessCodeInfolist
                 TextEntry::make('provision_status')->badge(),
                 TextEntry::make('lock_response_log')
                     ->label('Payload / instrucoes')
-                    ->formatStateUsing(fn (?array $state): string => $state ? json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '')
+                    ->state(fn (AccessCode $record): string => $record->lock_response_log ? json_encode($record->lock_response_log, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '')
                     ->fontFamily('mono')
                     ->columnSpanFull(),
             ]);

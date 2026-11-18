@@ -22,7 +22,7 @@ class AccountController extends Controller
             ->latest('starts_at')
             ->paginate(10);
 
-        $creditMovements = $request->user()->creditMovements()->latest('id')->paginate(20, ['*'], 'credits_page');
+        $creditMovements = $request->user()->creditMovements()->latest('created_at')->latest('id')->paginate(20, ['*'], 'credits_page');
         $trainerSubmission = $request->user()->personalTrainerSubmissions()->latest()->first();
 
         return view('account.dashboard', compact('creditMovements', 'bookings', 'trainerSubmission', 'sessionCreditValidity', 'undatedSessionCredits'));

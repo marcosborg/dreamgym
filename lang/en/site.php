@@ -9,6 +9,8 @@ return [
     'credit_history' => 'Credit history',
     'credit_history_since' => 'Movements recorded from 27 October 2026. The balance may include earlier credits.',
     'credit_kind_membership' => 'Membership',
+    'credit_kind_single_session' => 'Single session',
+    'credit_reason_single_purchase' => 'Single session purchase',
     'credit_kind_session' => 'Pack',
     'credit_balance' => 'Balance',
     'credit_reason_booking' => 'Booking',

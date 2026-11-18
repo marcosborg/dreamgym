@@ -6,3 +6,4 @@ deployment:
     - cd /home4/dreamgym/public_html && /usr/local/bin/php artisan optimize
     - cd /home4/dreamgym/public_html && /usr/local/bin/php artisan bookings:expire
     - cd /home4/dreamgym/public_html && /usr/local/bin/php artisan ttlock:sync
+    - cd /home4/dreamgym/public_html && /usr/local/bin/php artisan credits:backfill-single-sessions

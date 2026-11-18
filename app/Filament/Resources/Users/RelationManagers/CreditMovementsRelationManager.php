@@ -14,7 +14,7 @@ class CreditMovementsRelationManager extends RelationManager
 
     public function table(Table $table): Table
     {
-        return $table->defaultSort('id', 'desc')->columns([
+        return $table->defaultSort(fn ($query) => $query->orderByDesc('created_at')->orderByDesc('id'))->columns([
             TextColumn::make('created_at')->label('Data')->dateTime('d/m/Y H:i:s'),
             TextColumn::make('kind')->label('Tipo')->formatStateUsing(fn ($state) => __('site.credit_kind_'.$state)),
             TextColumn::make('amount')->label('Movimento')->formatStateUsing(fn ($state) => ($state > 0 ? '+' : '').$state),

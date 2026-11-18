@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\Locks\LockProvisioningService;
+use App\Services\SingleSessionHistory;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -78,6 +79,7 @@ class Booking extends Model
 
     protected static function booted(): void
     {
+        static::saved(fn (self $booking) => app(SingleSessionHistory::class)->record($booking));
         static::updating(function (self $booking) {
             if ($booking->isDirty(['room_id', 'starts_at', 'ends_at', 'payment_status', 'customer_email']) && $booking->accessCode?->ttlock_lock_id) {
                 throw ValidationException::withMessages(['status' => 'Cancele esta reserva e crie outra para alterar um acesso TTLock.']);
