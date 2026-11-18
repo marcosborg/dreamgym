@@ -85,11 +85,21 @@ class TtlockLockProvider implements LockProvider
 
     private function findPasscode(int $lockId, string $name, AccessCode $accessCode): ?int
     {
-        for ($page = 1; $page <= 5; $page++) {
+        $seenPages = [];
+        $deadline = microtime(true) + 120;
+        for ($page = 1; ; $page++) {
+            if (microtime(true) >= $deadline) {
+                throw new RuntimeException('A consulta dos PINs TTLock excedeu o tempo disponível. Será repetida.');
+            }
             $data = $this->client->request('/v3/lock/listKeyboardPwd', ['lockId' => $lockId, 'pageNo' => $page, 'pageSize' => 100]);
             if (! is_array($data['list'] ?? null)) {
                 throw new RuntimeException('Não foi possível reconciliar os PINs existentes.');
             }
+            $fingerprint = hash('sha256', json_encode($data['list']));
+            if (isset($seenPages[$fingerprint])) {
+                throw new RuntimeException('A TTLock devolveu uma página repetida. Não foi possível concluir a consulta dos PINs.');
+            }
+            $seenPages[$fingerprint] = true;
             foreach ($data['list'] as $pin) {
                 if (($pin['keyboardPwdName'] ?? '') === $name) {
                     if ((string) ($pin['keyboardPwd'] ?? '') !== $accessCode->code
@@ -106,7 +116,6 @@ class TtlockLockProvider implements LockProvider
                 return null;
             }
         }
-        throw new RuntimeException('A lista TTLock está incompleta.');
     }
 
     private function markProvisioned(AccessCode $accessCode, int $pinId): AccessCode

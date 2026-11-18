@@ -83,6 +83,45 @@ class TtlockIntegrationTest extends TestCase
         Http::assertSentCount(4);
     }
 
+    public function test_more_than_500_remote_pins_do_not_block_new_access(): void
+    {
+        $code = $this->code();
+        $sequence = Http::fakeSequence();
+        for ($page = 1; $page <= 6; $page++) {
+            $sequence->push(['list' => array_map(fn ($id) => ['keyboardPwdId' => $id, 'keyboardPwdName' => 'old-'.$id], range(($page - 1) * 100 + 1, $page * 100))]);
+        }
+        $sequence->push(['list' => []])->push(['keyboardPwdVersion' => 4])->push(['keyboardPwdId' => 900]);
+        $this->assertTrue(app(LockProvisioningService::class)->provision($code)->ready_for_use);
+        Http::assertSentCount(9);
+        Http::assertSent(fn ($r) => str_ends_with($r->url(), '/listKeyboardPwd') && $r['pageNo'] === 7);
+    }
+
+    public function test_existing_pin_beyond_page_five_is_recovered_without_duplicate(): void
+    {
+        $code = $this->code();
+        $sequence = Http::fakeSequence();
+        for ($page = 1; $page <= 5; $page++) {
+            $sequence->push(['list' => array_map(fn ($id) => ['keyboardPwdId' => $id, 'keyboardPwdName' => 'old-'.$id], range(($page - 1) * 100 + 1, $page * 100))]);
+        }
+        $sequence->push(['list' => [$this->remotePin($code)]]);
+        $this->artisan('ttlock:sync')->assertSuccessful();
+        $this->assertTrue($code->fresh()->ready_for_use);
+        $this->assertNotNull($code->fresh()->access_notified_at);
+        Mail::assertSent(BookingConfirmed::class, 1);
+        Http::assertSentCount(6);
+        Http::assertNotSent(fn ($r) => str_ends_with($r->url(), '/keyboardPwd/add'));
+    }
+
+    public function test_repeated_remote_page_fails_without_creating_a_duplicate(): void
+    {
+        $code = $this->code();
+        $page = ['list' => array_map(fn ($id) => ['keyboardPwdId' => $id, 'keyboardPwdName' => 'old-'.$id], range(1, 100))];
+        Http::fakeSequence()->push($page)->push($page);
+        $this->assertFalse(app(LockProvisioningService::class)->provision($code)->ready_for_use);
+        Http::assertSentCount(2);
+        Http::assertNotSent(fn ($r) => str_ends_with($r->url(), '/keyboardPwd/add'));
+    }
+
     public function test_cancellation_reconciles_and_revokes_only_the_booking_pin(): void
     {
         $code = $this->code();
