@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\AccessCode;
+use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\Cache;
@@ -23,9 +24,12 @@ class AccessHealth extends StatsOverviewWidget
             ->where(fn ($q) => $q->where('provision_status', '!=', AccessCode::PROVISIONED)
                 ->orWhereNull('ttlock_passcode_id')->orWhereNull('access_notified_at'))->count();
 
+        $lastSync = Cache::get('ttlock-last-sync');
+
         return [Stat::make('Acessos ou emails por concluir', $pending)
             ->description($pending ? 'Verifique as falhas em Access Codes. Se o gateway estiver offline, confirme alimentação e internet.' : 'Sem pendências nas reservas válidas.')
             ->color($pending ? 'danger' : 'success')->url('/admin/access-codes'),
-            Stat::make('Última sincronização automática', Cache::get('ttlock-last-sync', 'Ainda não registada'))];
+            Stat::make('Última sincronização automática', $lastSync ? Carbon::parse($lastSync)->format('H:i:s') : 'Por executar')
+                ->description($lastSync ? Carbon::parse($lastSync)->format('d/m/Y') : 'Ainda não registada')];
     }
 }
