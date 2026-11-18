@@ -106,3 +106,15 @@ real lock; `manual_ihr` requires manual programming.
 
 `MAIL_MAILER=log` does not deliver email, even outside sandbox. Configure the host's
 working SMTP or sendmail transport and verify delivery before claiming emails work.
+
+### TTLock: recuperação e diagnóstico
+
+No cPanel, manter uma única tarefa por minuto para recuperar acessos e emails pendentes:
+
+```cron
+* * * * * cd /home4/dreamgym/public_html && /usr/local/bin/php artisan ttlock:sync >> storage/logs/ttlock-sync.log 2>&1
+```
+
+O comando evita execuções sobrepostas, reconcilia antes de criar e não reativa reservas canceladas ou expiradas. Enquanto houver acessos/emails ou revogações pendentes, devolve código de saída de erro. O painel ADMIN apresenta as pendências e a última sincronização; Access Codes mostra a última falha e a data de envio.
+
+O erro TTLock -3002 indica gateway offline: verificar alimentação, internet e estado na aplicação TTLock. O software não pode repor uma ligação física desligada. Após a ligação voltar, a tarefa volta a tentar os acessos ainda válidos; confirmar o PIN na porta. Nunca marcar manualmente como configurado um código sem confirmação da TTLock.

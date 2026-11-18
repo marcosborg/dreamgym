@@ -24,6 +24,7 @@ class LockProvisioningService
                     'valid_until' => $accessCode->valid_until->toIso8601String(),
                     'failed_at' => now()->toIso8601String(),
                     'error' => $exception->getMessage(),
+                    'error_code' => $exception->getCode(),
                     'admin_note' => 'Reserva confirmada. Corrigir a configuracao da fechadura e tentar provisionar novamente.',
                 ],
                 'provisioned_at' => null,

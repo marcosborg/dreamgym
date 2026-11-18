@@ -25,6 +25,8 @@ class AccessCodesTable
                 TextColumn::make('valid_from')->dateTime('d/m/Y H:i')->sortable(),
                 TextColumn::make('valid_until')->dateTime('d/m/Y H:i')->sortable(),
                 TextColumn::make('provision_status')->badge(),
+                TextColumn::make('lock_response_log.error')->label('Última falha')->wrap(),
+                TextColumn::make('access_notified_at')->label('Email enviado')->dateTime('d/m/Y H:i'),
                 TextColumn::make('provisioned_at')->dateTime('d/m/Y H:i'),
             ])
             ->filters([

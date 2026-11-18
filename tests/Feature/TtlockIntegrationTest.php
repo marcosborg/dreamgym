@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Widgets\AccessHealth;
 use App\Mail\BookingConfirmed;
 use App\Models\AccessCode;
 use App\Models\Booking;
 use App\Models\Room;
 use App\Models\TtlockConnection;
+use App\Models\User;
 use App\Services\AccessCodeService;
 use App\Services\Locks\LockProvisioningService;
 use App\Services\Locks\TtlockClient;
@@ -15,6 +17,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
+use Livewire\Livewire;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -155,6 +158,48 @@ class TtlockIntegrationTest extends TestCase
         Mail::assertSent(BookingConfirmed::class, 1);
         $this->artisan('ttlock:sync')->assertSuccessful();
         Mail::assertSent(BookingConfirmed::class, 1);
+    }
+
+    public function test_offline_gateway_reports_failure_then_recovers_and_notifies_once(): void
+    {
+        $code = $this->code();
+        Http::fakeSequence()
+            ->push(['list' => []])->push(['keyboardPwdVersion' => 4])->push(['errcode' => -3002])
+            ->push(['list' => []])->push(['keyboardPwdVersion' => 4])->push(['keyboardPwdId' => 456]);
+        $this->artisan('ttlock:sync')->assertFailed();
+        $this->assertFalse($code->fresh()->ready_for_use);
+        $this->assertSame(-3002, $code->fresh()->lock_response_log['error_code']);
+        $this->assertStringContainsString('gateway TTLock está offline', $code->fresh()->lock_response_log['error']);
+        Mail::assertNothingSent();
+        $this->artisan('ttlock:sync')->assertSuccessful();
+        $this->artisan('ttlock:sync')->assertSuccessful();
+        $this->assertTrue($code->fresh()->ready_for_use);
+        $this->assertNotNull($code->fresh()->access_notified_at);
+        Mail::assertSent(BookingConfirmed::class, 1);
+        Http::assertSentCount(6);
+    }
+
+    public function test_failed_email_is_pending_and_retried_without_creating_another_pin(): void
+    {
+        $code = $this->code();
+        $code->update(['ttlock_lock_id' => 123, 'ttlock_passcode_id' => 456, 'provision_status' => AccessCode::PROVISIONED]);
+        $mailFake = Mail::getFacadeRoot();
+        Mail::shouldReceive('to')->once()->andThrow(new RuntimeException('SMTP unavailable'));
+        $this->artisan('ttlock:sync')->assertFailed();
+        $this->assertNull($code->fresh()->access_notified_at);
+        Mail::swap($mailFake);
+        $this->artisan('ttlock:sync')->assertSuccessful();
+        Mail::assertSent(BookingConfirmed::class, 1);
+        Http::assertNothingSent();
+    }
+
+    public function test_admin_dashboard_reports_pending_access_without_exposing_pin(): void
+    {
+        $code = $this->code();
+        $this->actingAs(User::factory()->create(['is_admin' => true]));
+        Livewire::test(AccessHealth::class)
+            ->assertSee('Acessos ou emails por concluir')->assertSee('Verifique as falhas')
+            ->assertDontSee($code->code);
     }
 
     public function test_mismatched_remote_pin_is_never_overwritten(): void

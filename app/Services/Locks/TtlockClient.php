@@ -74,7 +74,14 @@ class TtlockClient
         }
         if (! $response->successful() || ! is_array($json) || isset($json['error']) || (isset($json['errcode']) && (int) $json['errcode'] !== 0)) {
             $code = is_array($json) && is_numeric($json['errcode'] ?? null) ? (int) $json['errcode'] : 0;
-            throw new RuntimeException('Pedido TTLock recusado (código '.$code.').');
+            $message = match ($code) {
+                -3002 => 'O gateway TTLock está offline. Verifique a alimentação e a ligação à internet.',
+                -2012 => 'A fechadura não está ligada a um gateway TTLock.',
+                -3003, -3037 => 'O gateway ou a fechadura TTLock estão ocupados. A operação será repetida.',
+                -3036 => 'A fechadura TTLock está offline.',
+                default => 'Pedido TTLock recusado',
+            };
+            throw new RuntimeException($message.' (código '.$code.').', $code);
         }
 
         return $json;

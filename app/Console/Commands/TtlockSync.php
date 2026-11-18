@@ -8,6 +8,7 @@ use App\Services\Locks\LockProvisioningService;
 use App\Services\Locks\TtlockClient;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class TtlockSync extends Command
@@ -42,8 +43,11 @@ class TtlockSync extends Command
                 ->where(fn ($q) => $q->whereIn('provision_status', [AccessCode::PENDING, AccessCode::FAILED])->orWhere(function ($q) {
                     $q->whereNotNull('ttlock_passcode_id')->whereNull('access_notified_at');
                 }))
-                ->each(function ($code) use ($service) {
+                ->orderBy('valid_until')->get()->each(function ($code) use ($service) {
                     $code = $service->provision($code);
+                    if (! $code->ready_for_use) {
+                        $this->warn('Acesso pendente: reserva '.$code->booking_id.' — '.($code->lock_response_log['error'] ?? 'Aguarda confirmação TTLock'));
+                    }
                     if ($code->ready_for_use && ! $code->access_notified_at) {
                         try {
                             $booking = $code->booking()->with(['room', 'accessCode'])->firstOrFail();
@@ -55,9 +59,17 @@ class TtlockSync extends Command
                     }
                 });
             $pending = AccessCode::where('provision_status', 'revoke_pending')->count();
-            $this->info('Sincronização concluída. Revogações pendentes: '.$pending);
+            $unresolved = AccessCode::where('valid_until', '>', now())->whereNull('revoked_at')
+                ->whereHas('booking', fn ($q) => $q->where('status', 'confirmed')->where('payment_status', 'paid'))
+                ->where(fn ($q) => $q->where('provision_status', '!=', AccessCode::PROVISIONED)
+                    ->orWhereNull('ttlock_passcode_id')->orWhereNull('access_notified_at'))->count();
+            $this->info(now()->toIso8601String().' — Acessos/emails pendentes: '.$unresolved.'. Revogações pendentes: '.$pending);
+            Cache::put('ttlock-last-sync', now()->toIso8601String(), now()->addDay());
+            if ($pending || $unresolved) {
+                Log::warning('TTLock: sincronização com pendências.', ['access_pending' => $unresolved, 'revoke_pending' => $pending]);
+            }
 
-            return $pending ? self::FAILURE : self::SUCCESS;
+            return ($pending || $unresolved) ? self::FAILURE : self::SUCCESS;
         }) ?? self::SUCCESS;
     }
 }
