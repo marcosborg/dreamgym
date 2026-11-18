@@ -118,3 +118,5 @@ No cPanel, manter uma única tarefa por minuto para recuperar acessos e emails p
 O comando evita execuções sobrepostas, reconcilia antes de criar e não reativa reservas canceladas ou expiradas. Enquanto houver acessos/emails ou revogações pendentes, devolve código de saída de erro. O painel ADMIN apresenta as pendências e a última sincronização; Access Codes mostra a última falha e a data de envio.
 
 O erro TTLock -3002 indica gateway offline: verificar alimentação, internet e estado na aplicação TTLock. O software não pode repor uma ligação física desligada. Após a ligação voltar, a tarefa volta a tentar os acessos ainda válidos; confirmar o PIN na porta. Nunca marcar manualmente como configurado um código sem confirmação da TTLock.
+
+A publicação usa `ttlock:sync --allow-pending` para não bloquear correções de software enquanto um equipamento está offline. As pendências continuam visíveis e registadas; o cron normal não utiliza esta opção e devolve erro enquanto existirem pendências.

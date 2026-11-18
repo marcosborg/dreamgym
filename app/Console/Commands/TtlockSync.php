@@ -13,7 +13,7 @@ use Throwable;
 
 class TtlockSync extends Command
 {
-    protected $signature = 'ttlock:sync';
+    protected $signature = 'ttlock:sync {--allow-pending : Permitir a publicação de código com pendências físicas reportadas no ADMIN}';
 
     protected $description = 'Renovar tokens e reconciliar apenas acessos TTLock de reservas existentes';
 
@@ -69,7 +69,7 @@ class TtlockSync extends Command
                 Log::warning('TTLock: sincronização com pendências.', ['access_pending' => $unresolved, 'revoke_pending' => $pending]);
             }
 
-            return ($pending || $unresolved) ? self::FAILURE : self::SUCCESS;
+            return ($pending || $unresolved) && ! $this->option('allow-pending') ? self::FAILURE : self::SUCCESS;
         }) ?? self::SUCCESS;
     }
 }

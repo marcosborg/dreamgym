@@ -202,6 +202,16 @@ class TtlockIntegrationTest extends TestCase
             ->assertDontSee($code->code);
     }
 
+    public function test_deployment_can_finish_while_still_reporting_offline_access(): void
+    {
+        $code = $this->code();
+        Http::fakeSequence()->push(['list' => []])->push(['keyboardPwdVersion' => 4])->push(['errcode' => -3002]);
+        $this->artisan('ttlock:sync', ['--allow-pending' => true])
+            ->expectsOutputToContain('Acesso pendente: reserva '.$code->booking_id)->assertSuccessful();
+        $this->assertFalse($code->fresh()->ready_for_use);
+        Mail::assertNothingSent();
+    }
+
     public function test_mismatched_remote_pin_is_never_overwritten(): void
     {
         $code = $this->code();
